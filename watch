@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+WATCH_DIR="$HOME/.local/src/c++/aima"
+FORMAT=$'\033[1;33m%w%f\033[0m changed'
+
+run_build() {
+  (
+    cd "$WATCH_DIR"
+    ./mm || echo "Build failed (waiting for next change)..."
+  )
+}
+
+run_build
+
+while inotifywait -r \
+  -e close_write,create,delete,move \
+  --format "$FORMAT" \
+  --exclude '(^|/)\.git(/|$)|(^|/)build(/|$)|(^|/)compile_commands\.json$|(^|/)\.cache(/|$)' \
+  "$WATCH_DIR"
+do
+  run_build
+done
+

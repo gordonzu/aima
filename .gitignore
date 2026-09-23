@@ -1,0 +1,10 @@
+tests/lib/
+build/
+.cache/
+.git/
+.idea/
+*.swp
+*.o
+*.so
+*.user
+compile_commands.json

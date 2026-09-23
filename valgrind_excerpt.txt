@@ -1,0 +1,85 @@
+grep -n -A30 -B5 \
+  -E "Invalid read|Invalid write|Use of uninitialised|SIGSEGV|Process terminating|ERROR SUMMARY" \
+  valgrind.log > valgrind_excerpt.txt
+
+
+
+
+
+
+16-Running main() from /home/gordonyx/.local/src/c++/aima/build/_deps/googletest-src/googletest/src/gtest_main.cc
+17-[==========] Running 1 test from 1 test suite.
+18-[----------] Global test environment set-up.
+19-[----------] 1 test from RandomVacuumAgentTest
+20-[ RUN      ] RandomVacuumAgentTest.CleanBothLocations
+21:==31316== Use of uninitialised value of size 8
+22-==31316==    at 0x4008664: std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>::operator()() (random.tcc:458)
+23-==31316==    by 0x4008D07: unsigned int std::uniform_int_distribution<int>::_S_nd<unsigned long, std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>, unsigned int>(std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>&, unsigned int) (uniform_int_dist.h:269)
+24-==31316==    by 0x4008BBA: int std::uniform_int_distribution<int>::operator()<std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul> >(std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>&, std::uniform_int_distribution<int>::param_type const&) (uniform_int_dist.h:328)
+25-==31316==    by 0x4005BBF: int std::uniform_int_distribution<int>::operator()<std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul> >(std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>&) (uniform_int_dist.h:204)
+26-==31316==    by 0x4005014: aima::TrivialVacuumEnvironment@mod_agent::random_cleanliness() (src/Agent.cpp:144)
+27-==31316==    by 0x4004F7A: aima::TrivialVacuumEnvironment@mod_agent::TrivialVacuumEnvironment(std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>&) (src/Agent.cpp:109)
+28-==31316==    by 0x400160C: RandomVacuumAgentTest_CleanBothLocations_Test::TestBody() (tests/unit_tests/test_agents.cpp:10)
+29-==31316==    by 0x405FC33: void testing::internal::HandleSehExceptionsInMethodIfSupported<testing::Test, void>(testing::Test*, void (testing::Test::*)(), char const*) (gtest.cc:2612)
+30-==31316==    by 0x403F595: void testing::internal::HandleExceptionsInMethodIfSupported<testing::Test, void>(testing::Test*, void (testing::Test::*)(), char const*) (gtest.cc:2648)
+31-==31316==    by 0x401D756: testing::Test::Run() (gtest.cc:2687)
+32-==31316==    by 0x401E2CB: testing::TestInfo::Run() (gtest.cc:2836)
+33-==31316==    by 0x401EACC: testing::TestSuite::Run() (gtest.cc:3015)
+34-==31316==  Uninitialised value was created by a stack allocation
+35-==31316==    at 0x40015C4: RandomVacuumAgentTest_CleanBothLocations_Test::TestBody() (tests/unit_tests/test_agents.cpp:6)
+36-==31316== 
+37:==31316== Invalid read of size 8
+38-==31316==    at 0x4008664: std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>::operator()() (random.tcc:458)
+39-==31316==    by 0x4008D07: unsigned int std::uniform_int_distribution<int>::_S_nd<unsigned long, std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>, unsigned int>(std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>&, unsigned int) (uniform_int_dist.h:269)
+40-==31316==    by 0x4008BBA: int std::uniform_int_distribution<int>::operator()<std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul> >(std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>&, std::uniform_int_distribution<int>::param_type const&) (uniform_int_dist.h:328)
+41-==31316==    by 0x4005BBF: int std::uniform_int_distribution<int>::operator()<std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul> >(std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>&) (uniform_int_dist.h:204)
+42-==31316==    by 0x4005014: aima::TrivialVacuumEnvironment@mod_agent::random_cleanliness() (src/Agent.cpp:144)
+43-==31316==    by 0x4004F7A: aima::TrivialVacuumEnvironment@mod_agent::TrivialVacuumEnvironment(std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>&) (src/Agent.cpp:109)
+44-==31316==    by 0x400160C: RandomVacuumAgentTest_CleanBothLocations_Test::TestBody() (tests/unit_tests/test_agents.cpp:10)
+45-==31316==    by 0x405FC33: void testing::internal::HandleSehExceptionsInMethodIfSupported<testing::Test, void>(testing::Test*, void (testing::Test::*)(), char const*) (gtest.cc:2612)
+46-==31316==    by 0x403F595: void testing::internal::HandleExceptionsInMethodIfSupported<testing::Test, void>(testing::Test*, void (testing::Test::*)(), char const*) (gtest.cc:2648)
+47-==31316==    by 0x401D756: testing::Test::Run() (gtest.cc:2687)
+48-==31316==    by 0x401E2CB: testing::TestInfo::Run() (gtest.cc:2836)
+49-==31316==    by 0x401EACC: testing::TestSuite::Run() (gtest.cc:3015)
+50-==31316==  Address 0xfa99e97 is not stack'd, malloc'd or (recently) free'd
+51-==31316== 
+52-==31316== 
+53:==31316== Process terminating with default action of signal 11 (SIGSEGV)
+54-==31316==  Access not within mapped region at address 0xFA99E97
+55-==31316==    at 0x4008664: std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>::operator()() (random.tcc:458)
+56-==31316==    by 0x4008D07: unsigned int std::uniform_int_distribution<int>::_S_nd<unsigned long, std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>, unsigned int>(std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>&, unsigned int) (uniform_int_dist.h:269)
+57-==31316==    by 0x4008BBA: int std::uniform_int_distribution<int>::operator()<std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul> >(std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>&, std::uniform_int_distribution<int>::param_type const&) (uniform_int_dist.h:328)
+58-==31316==    by 0x4005BBF: int std::uniform_int_distribution<int>::operator()<std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul> >(std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>&) (uniform_int_dist.h:204)
+59-==31316==    by 0x4005014: aima::TrivialVacuumEnvironment@mod_agent::random_cleanliness() (src/Agent.cpp:144)
+60-==31316==    by 0x4004F7A: aima::TrivialVacuumEnvironment@mod_agent::TrivialVacuumEnvironment(std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>&) (src/Agent.cpp:109)
+61-==31316==    by 0x400160C: RandomVacuumAgentTest_CleanBothLocations_Test::TestBody() (tests/unit_tests/test_agents.cpp:10)
+62-==31316==    by 0x405FC33: void testing::internal::HandleSehExceptionsInMethodIfSupported<testing::Test, void>(testing::Test*, void (testing::Test::*)(), char const*) (gtest.cc:2612)
+63-==31316==    by 0x403F595: void testing::internal::HandleExceptionsInMethodIfSupported<testing::Test, void>(testing::Test*, void (testing::Test::*)(), char const*) (gtest.cc:2648)
+64-==31316==    by 0x401D756: testing::Test::Run() (gtest.cc:2687)
+65-==31316==    by 0x401E2CB: testing::TestInfo::Run() (gtest.cc:2836)
+66-==31316==    by 0x401EACC: testing::TestSuite::Run() (gtest.cc:3015)
+67-==31316==  If you believe this happened as a result of a stack
+68-==31316==  overflow in your program's main thread (unlikely but
+69-==31316==  possible), you can try to increase the size of the
+70-==31316==  main thread stack using the --main-stacksize= flag.
+71-==31316==  The main thread stack size used in this run was 8388608.
+72-==31316== 
+73-==31316== HEAP SUMMARY:
+74-==31316==     in use at exit: 79,705 bytes in 26 blocks
+75-==31316==   total heap usage: 197 allocs, 171 frees, 115,396 bytes allocated
+76-==31316== 
+77-==31316== 4 bytes in 1 blocks are still reachable in loss record 1 of 26
+78-==31316==    at 0x48DD26C: operator new(unsigned long) (vg_replace_malloc.c:501)
+79-==31316==    by 0x4054125: std::__new_allocator<int>::allocate(unsigned long, void const*) (new_allocator.h:151)
+80-==31316==    by 0x4053F5F: allocate (allocator.h:203)
+81-==31316==    by 0x4053F5F: allocate (alloc_traits.h:614)
+82-==31316==    by 0x4053F5F: std::_Vector_base<int, std::allocator<int> >::_M_allocate(unsigned long) (stl_vector.h:387)
+83-==31316==    by 0x4053B77: void std::vector<int, std::allocator<int> >::_M_realloc_append<int>(int&&) (vector.tcc:572)
+--
+446-==31316==      possibly lost: 0 bytes in 0 blocks
+447-==31316==    still reachable: 79,705 bytes in 26 blocks
+448-==31316==         suppressed: 0 bytes in 0 blocks
+449-==31316== 
+450-==31316== For lists of detected and suppressed errors, rerun with: -s
+451:==31316== ERROR SUMMARY: 2 errors from 2 contexts (suppressed: 0 from 0)
+452-./mm: line 19: 31316 Segmentation fault         (core dumped) valgrind --tool=memcheck --track-origins=yes --leak-check=full --show-leak-kinds=all "$BUILD_DIR/tests/unit_tests/aima_unit_tests"
