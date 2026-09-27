@@ -11,14 +11,13 @@ export module aima.environment;
 namespace xyenv {
     export struct Wall{};
     export struct XYAgent{};
-    export struct XYLocation{};
+    export struct XYLocation{ int x = 1; int y = 1; };
 
     using Object = std::variant<Wall, XYAgent>;
 
     export struct XYEnvironment {
-        unsigned width  = 0;
-        unsigned height = 0;
-
+        int width  = 0;
+        int height = 0;
         std::vector<std::vector<Object>> objects;
     };
 
@@ -38,5 +37,5 @@ namespace xyenv {
     }
 
 
-} // namespace env 
+} // namespace xyenv 
 
