@@ -6,6 +6,8 @@ BUILD_DIR="$ROOT_DIR/build"
 
 mkdir -p "$BUILD_DIR"
 
+find "$BUILD_DIR" -name "*.pcm" -delete 2>/dev/null || true
+
 cmake -S "$ROOT_DIR" -B "$BUILD_DIR" \
   -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
   -DCMAKE_BUILD_TYPE=Debug \
@@ -17,6 +19,7 @@ ln -sfn "$BUILD_DIR/compile_commands.json" "$ROOT_DIR/compile_commands.json"
 
 valgrind --tool=memcheck --track-origins=yes --leak-check=full --show-leak-kinds=all \
   "$BUILD_DIR/tests/unit_tests/aima_unit_tests"
+
 
 
 

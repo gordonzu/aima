@@ -5,6 +5,7 @@ target_sources(aima_lib
         FILE_SET CXX_MODULES
         FILES
             agent.cpp
+            environment.cpp
 )
 
 target_compile_features(aima_lib PUBLIC cxx_std_20)
