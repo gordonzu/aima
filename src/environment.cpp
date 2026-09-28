@@ -1,41 +1,121 @@
 module;
 
 #include <cstddef>
-#include <cstdio>
 #include <stdexcept>
 #include <variant>
 #include <vector>
+#include <map>
 
 export module aima.environment;
 
 namespace xyenv {
     export struct Wall{};
     export struct XYAgent{};
-    export struct XYLocation{ int x = 1; int y = 1; };
 
-    using Object = std::variant<Wall, XYAgent>;
+    export struct XYLocation {
+        auto operator<=>(const XYLocation&) const = default;
+        bool operator==(const XYLocation&) const = default;
 
-    export struct XYEnvironment {
-        int width  = 0;
-        int height = 0;
-        std::vector<std::vector<Object>> objects;
+        int x_ = 0;
+        int y_ = 0;
     };
 
-    export XYEnvironment make_xy_environment(int w, int h)
-    {
+    using Object = std::variant<Wall, XYAgent>;
+    using Vec = std::vector<Object>;
+    using Map = std::map<XYLocation, Vec>;
+
+    export struct XYEnvironment {
+        unsigned w_  = 0;
+        unsigned h_ = 0;
+
+        Map map_;
+    };
+
+    export XYLocation makeXYLocation(int x, int y) {
+        if (x <= 0 || y <= 0) throw std::invalid_argument("x and y must be > 0");
+
+        XYLocation loc;
+        loc.x_ = x;
+        loc.y_ = y;
+
+        return loc;
+    }
+
+    export XYEnvironment makeXYEnvironment(int w, int h) {
         if (w <= 0 || h <= 0) throw std::invalid_argument("width and height must be > 0");
+
         XYEnvironment env;
-        env.width   = w;
-        env.height  = h;
-        env.objects.resize(static_cast<size_t>(w * h));
+        env.w_ = static_cast<unsigned>(w);
+        env.h_ = static_cast<unsigned>(h);
+
+        
+        for (int x = 1; x <= w; ++x) {
+            for (int y = 1; y <= h; ++y) {
+                env.map_.emplace(XYLocation(x,y), Vec()); 
+            }
+        }
+
         return env;
     }
 
-    export size_t getMapSize(const XYEnvironment& xy) 
-    {
-        return xy.objects.size();
+    export size_t mapSize(const XYEnvironment& env) {
+        return env.map_.size();
+    }
+
+    export std::size_t agentCount(const XYEnvironment& env, const XYLocation& loc) {
+        auto it = env.map_.find(loc);
+        if (it == env.map_.end()) return 0;
+        
+        return it->second.size();
+    }
+
+    export bool addAgentToLocation(const XYAgent& agent, 
+                                   XYEnvironment& env, 
+                                   const XYLocation& loc) {
+        auto it = env.map_.find(loc);
+        if (it == env.map_.end()) return false;
+        else { 
+            it->second.emplace_back(std::move(agent));
+            return true;
+        };           
     }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 } // namespace xyenv 
+
+
+
+
+
+
+
+
+
+
+
+
+
 

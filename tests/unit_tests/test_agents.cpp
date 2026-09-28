@@ -5,9 +5,20 @@ import aima.agent;
 
 using namespace xyenv;
 
-TEST(XYEnvironmentTest, ConstructMatrix) {
-    auto x = make_xy_environment(10, 10); 
-    ASSERT_EQ(getMapSize(x), size_t(100));
+TEST(XYEnvironmentTest, ConstructMatrix) 
+{
+    auto env = makeXYEnvironment(10, 10); 
+    ASSERT_EQ(mapSize(env), size_t(100));
+}
+
+TEST(XyEnvironmentTest, AddAgentToLocation) 
+{
+    auto env = makeXYEnvironment(10, 12);
+    auto xy = makeXYLocation(3, 4);
+    auto agent = XYAgent();
+    
+    ASSERT_TRUE(addAgentToLocation(agent, env, xy));
+    ASSERT_EQ(agentCount(env, xy), size_t(1));
 }
 
 
