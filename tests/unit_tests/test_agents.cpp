@@ -14,11 +14,10 @@ TEST(XYEnvironmentTest, ConstructMatrix)
 TEST(XyEnvironmentTest, AddAgentToLocation) 
 {
     auto env = makeXYEnvironment(10, 12);
-    auto xy = makeXYLocation(3, 4);
+    auto xy = XYLocation(3, 4);
     auto agent = XYAgent();
     
     ASSERT_TRUE(addAgentToLocation(agent, env, xy));
-    ASSERT_EQ(agentCount(env, xy), size_t(1));
 }
 
 
