@@ -15,7 +15,7 @@ TEST(XyEnvironmentTest, AddAgentToLocation)
 {
     auto env = makeXYEnvironment(10, 12);
     auto xy = XYLocation(3, 4);
-    auto agent = XYAgent();
+    auto agent = XYAgent(1);
     
     ASSERT_TRUE(addAgentToLocation(agent, env, xy));
 }
