@@ -3,7 +3,7 @@
 import aima.environment;
 import aima.agent;
 
-using namespace xyenv;
+using namespace env;
 
 TEST(XYEnvironmentTest, ConstructMatrix) 
 {

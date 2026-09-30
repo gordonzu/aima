@@ -2,14 +2,26 @@ module;
 
 #include <cstddef>
 #include <stdexcept>
+#include <type_traits>
 #include <variant>
-#include <vector>
 #include <map>
 #include <optional>
 
 export module aima.environment;
 
-namespace xyenv {
+namespace env {
+    
+    //////////////////// data //////////////////////
+
+    export enum class Type { wall, xyagent };
+
+    export struct TypeRef { 
+        Type type; 
+        int id; 
+
+        TypeRef() = default;
+        TypeRef(Type t, int i) : type(t), id(i) {}
+    };
 
     export struct Wall{ 
       int id_=0;
@@ -28,9 +40,7 @@ namespace xyenv {
         int y_ = 0;
 
         XYLocation() = default;
-        XYLocation(int x, int y) : x_(x), y_(y) {
-            if (x <= 0 || y <= 0) throw std::invalid_argument("params must be > 0");
-        }
+        XYLocation(int x, int y) : x_(x), y_(y) {}
 
         auto operator<=>(const XYLocation&) const = default;
         bool operator==(const XYLocation&) const = default;
@@ -47,6 +57,38 @@ namespace xyenv {
         Map map_;
     };
 
+    /////////////////// logic ///////////////////////////////  
+
+    export bool inBounds(const XYEnvironment& env, const XYLocation& loc) {
+        return loc.x_ >= 1 && loc.y_ >= 1 &&
+               loc.x_ <= static_cast<int>(env.w_) &&
+               loc.y_ <= static_cast<int>(env.h_);
+    }
+
+    export std::optional<TypeRef> getObjectAt(const XYEnvironment& env, const XYLocation& loc) {
+        if (!inBounds(env, loc)) return std::nullopt;
+
+        auto it = env.map_.find(loc);
+        if (it == env.map_.end()) return std::nullopt;
+
+        const Tile& tile = it->second;
+        if (!tile.has_value()) return std::nullopt;
+
+        const Object& obj = tile.value();
+
+        return std::visit(
+            [](const auto& x) -> TypeRef {
+                using T = std::decay_t<decltype(x)>;
+                if constexpr (std::is_same_v<T, Wall> ) {
+                    return TypeRef(Type::wall, x.id_);
+                } else if constexpr (std::is_same_v<T, XYAgent>) {
+                    return TypeRef(Type::xyagent, x.id_);
+                }
+            },
+            obj
+        );
+    }
+    
     export XYEnvironment makeXYEnvironment(int w, int h) {
         if (w <= 0 || h <= 0) throw std::invalid_argument("params must be > 0");
 
@@ -73,9 +115,7 @@ namespace xyenv {
         return it != env.map_.end() && it->second.has_value(); 
     }
 
-    export bool addAgentToLocation(const XYAgent& agent, 
-                                   XYEnvironment& env, 
-                                   const XYLocation& loc) {
+    export bool addAgentToLocation(XYAgent agent, XYEnvironment& env, const XYLocation& loc) {
         auto it = env.map_.find(loc);
         if (it == env.map_.end()) return false;
         if (it->second.has_value()) return false;
@@ -83,31 +123,7 @@ namespace xyenv {
         return true;
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-} // namespace xyenv 
+} // namespace env 
 
 
 
