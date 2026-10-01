@@ -2,10 +2,10 @@ module;
 
 #include <cstddef>
 #include <stdexcept>
-#include <type_traits>
 #include <variant>
 #include <map>
 #include <optional>
+#include <iostream>
 
 export module aima.environment;
 
@@ -16,23 +16,27 @@ namespace env {
     export enum class Type { wall, xyagent };
 
     export struct TypeRef { 
-        Type type; 
-        int id; 
+        Type type_; 
+        int id_; 
 
-        TypeRef() = default;
-        TypeRef(Type t, int i) : type(t), id(i) {}
+        explicit TypeRef(Type t) : type_(t), id_(nextId()) {}
+        TypeRef() = delete;
+
+    private:
+        static int nextId() {
+            static int counter = 0;
+            return ++counter;
+        }
     };
 
     export struct Wall{ 
-      int id_=0;
-      Wall() = default;
-      explicit Wall(int id) : id_(id) {}
+      TypeRef ref_;
+      Wall() : ref_(Type::wall) {}
     };
 
     export struct XYAgent{ 
-      int id_=0;
-      XYAgent() = default;
-      explicit XYAgent(int id) : id_(id) {}
+      TypeRef ref_;
+      XYAgent() : ref_(Type::xyagent) {}
     };
 
     export struct XYLocation {
@@ -59,6 +63,16 @@ namespace env {
 
     /////////////////// logic ///////////////////////////////  
 
+    export std::ostream& operator<<(std::ostream& os, const TypeRef& t) {
+        const char* name = (t.type_ == Type::xyagent) ? "xyagent" : "wall";
+        return os << "[" << name << ", " << t.id_ << "]";
+    }
+
+    export std::ostream& operator<<(std::ostream& os, const std::optional<TypeRef>& t) {
+        if (!t) return os << "[none]";
+        return os << *t;
+    }
+
     export bool inBounds(const XYEnvironment& env, const XYLocation& loc) {
         return loc.x_ >= 1 && loc.y_ >= 1 &&
                loc.x_ <= static_cast<int>(env.w_) &&
@@ -78,12 +92,7 @@ namespace env {
 
         return std::visit(
             [](const auto& x) -> TypeRef {
-                using T = std::decay_t<decltype(x)>;
-                if constexpr (std::is_same_v<T, Wall> ) {
-                    return TypeRef(Type::wall, x.id_);
-                } else if constexpr (std::is_same_v<T, XYAgent>) {
-                    return TypeRef(Type::xyagent, x.id_);
-                }
+                return x.ref_;
             },
             obj
         );

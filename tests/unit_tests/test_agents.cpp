@@ -1,4 +1,5 @@
 #include <gtest/gtest.h> 
+#include <sstream>
 
 import aima.environment;
 import aima.agent;
@@ -14,10 +15,14 @@ TEST(XYEnvironmentTest, ConstructMatrix)
 TEST(XyEnvironmentTest, AddAgentToLocation) 
 {
     auto env = makeXYEnvironment(10, 12);
-    auto xy = XYLocation(3, 4);
-    auto agent = XYAgent(1);
-    
-    ASSERT_TRUE(addAgentToLocation(agent, env, xy));
+    auto loc = XYLocation(3, 4);
+    auto agent = XYAgent();
+
+    std::ostringstream oss;
+
+    ASSERT_TRUE(addAgentToLocation(agent, env, loc));
+    oss << getObjectAt(env, loc);
+    ASSERT_EQ(oss.str(), "[xyagent, 1]");
 }
 
 
