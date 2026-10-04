@@ -4,7 +4,7 @@
 import aima.environment;
 import aima.agent;
 
-using namespace env;
+using namespace environment;
 
 TEST(XYEnvironmentTest, ConstructMatrix) 
 {
@@ -14,14 +14,15 @@ TEST(XYEnvironmentTest, ConstructMatrix)
 
 TEST(XyEnvironmentTest, AddAgentToLocation) 
 {
-    auto env = makeXYEnvironment(10, 12);
-    auto loc = XYLocation(3, 4);
-    auto agent = XYAgent();
-
+    auto env    = makeXYEnvironment(12, 10);
+    auto loc    = XYLocation(3, 4);
+    auto agent  = XYAgent();
     std::ostringstream oss;
 
     ASSERT_TRUE(addAgentToLocation(agent, env, loc));
+
     oss << getObjectAt(env, loc);
+
     ASSERT_EQ(oss.str(), "[xyagent, 1]");
 }
 
