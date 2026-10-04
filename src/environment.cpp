@@ -11,7 +11,7 @@ export module aima.environment;
 
 namespace environment {
     
-    //////////////////// data //////////////////////
+    //////////////////// data ///////////////////////////////
 
     export enum class Type { wall, xyagent };
 
@@ -88,24 +88,13 @@ namespace environment {
     }
 
     export std::optional<TypeRef> getObjectAt(const XYEnvironment& env, const XYLocation& loc) {
-        if (!inBounds(env, loc)) {
-            std::cout << "location out of bounds..." << '\n';
-            return std::nullopt;
-        }
+        if (!inBounds(env, loc)) return std::nullopt;
 
         auto it = env.map_.find(loc);
-
-        if (it == env.map_.end()) {
-            std::cout << "location not found in map..." << '\n';
-            return std::nullopt;
-        }
+        if (it == env.map_.end()) return std::nullopt;
 
         const Tile& tile = it->second;
-
-        if (!tile.has_value()) {
-              std::cout << "Tile has no value..." << '\n';
-              return std::nullopt;
-        }
+        if (!tile.has_value()) return std::nullopt;
 
         const Object& obj = tile.value();
 
