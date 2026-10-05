@@ -6,6 +6,7 @@ module;
 #include <map>
 #include <optional>
 #include <iostream>
+#include <vector>
 
 export module aima.environment;
 
@@ -52,8 +53,8 @@ namespace environment {
     };
 
     using Object = std::variant<Wall, XYAgent>;
-    using Tile = std::optional<Object>;
-    using Map = std::map<XYLocation, Tile>;
+    using Tiles = std::vector<Object>;
+    using Map = std::map<XYLocation, Tiles>;
 
     export struct XYEnvironment {
         unsigned w_  = 0;
@@ -82,8 +83,8 @@ namespace environment {
     export bool addAgentToLocation(XYAgent agent, XYEnvironment& env, const XYLocation& loc) {
         auto it = env.map_.find(loc);
         if (it == env.map_.end()) return false;
-        if (it->second.has_value()) return false;
-        it->second = Object(std::move(agent));
+        if (!it->second.empty()) return false; // will change logic after adding walls, dirt, gold etc.
+        it->second.push_back(Object(std::move(agent)));
         return true;
     }
 
@@ -93,10 +94,10 @@ namespace environment {
         auto it = env.map_.find(loc);
         if (it == env.map_.end()) return std::nullopt;
 
-        const Tile& tile = it->second;
-        if (!tile.has_value()) return std::nullopt;
+        const Tiles& tiles = it->second;
+        if (tiles.empty()) return std::nullopt;
 
-        const Object& obj = tile.value();
+        const Object& obj = tiles.front(); // will change logic to return set when adding more Objects
 
         return std::visit(
             [](const auto& x) -> TypeRef {
@@ -113,10 +114,9 @@ namespace environment {
         env.w_ = static_cast<unsigned>(w);
         env.h_ = static_cast<unsigned>(h);
 
-        
         for (int x = 1; x <= w; ++x) {
             for (int y = 1; y <= h; ++y) {
-                env.map_.emplace(XYLocation(x,y), std::nullopt); 
+                env.map_.emplace(XYLocation(x,y), Tiles()); 
             }
         }
 
@@ -129,7 +129,7 @@ namespace environment {
 
     export bool isOccupied(const XYEnvironment& env, const XYLocation& loc) {
         auto it = env.map_.find(loc);
-        return it != env.map_.end() && it->second.has_value(); 
+        return it != env.map_.end() && !it->second.empty(); 
     }
 
 } // namespace environment 
