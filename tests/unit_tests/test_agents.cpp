@@ -51,7 +51,15 @@ TEST(XyEnvironmentTest, IsOccupiedAfterAdd) {
     ASSERT_TRUE(isOccupied(env, loc));
 }
 
+TEST(XyEnvironmentTest, AgentIsRegisteredAfterAdd) {
+    auto env = makeXYEnvironment(12, 10);
+    auto loc = XYLocation(6, 6);
+    auto agent = XYAgent();
 
+    addAgentToLocation(agent, env, loc);
+    ASSERT_EQ(1, (int)env.agents_.size());
+    ASSERT_TRUE(hasAgent(env.agents_, agent));
+}
 
 
 

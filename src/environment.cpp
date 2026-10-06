@@ -11,12 +11,22 @@ module;
 export module aima.environment;
 
 namespace environment {
+    export struct XYLocation; 
+    export struct XYEnvironment;
+    export struct XYAgent;
+    export struct Wall;
+    export struct TypeRef;
+    export enum class Type;
     
-    //////////////////// data ///////////////////////////////
+    using Object = std::variant<Wall, XYAgent>;
+    using Tiles = std::vector<Object>;
+    using Agents = std::map<int, XYAgent>;
+    using XYSpace = std::map<XYLocation, Tiles>;
 
-    export enum class Type { wall, xyagent };
+    ///////////////////////////////////////////////////////////////////////////
+    enum class Type { wall, xyagent };
 
-    export struct TypeRef { 
+    struct TypeRef { 
         Type type_; 
         int id_; 
 
@@ -30,17 +40,17 @@ namespace environment {
         }
     };
 
-    export struct Wall{ 
+    struct Wall{ 
       TypeRef ref_;
       Wall() : ref_(Type::wall) {}
     };
 
-    export struct XYAgent{ 
+    struct XYAgent{ 
       TypeRef ref_;
       XYAgent() : ref_(Type::xyagent) {}
     };
 
-    export struct XYLocation {
+    struct XYLocation {
         int x_ = 0;
         int y_ = 0;
 
@@ -49,21 +59,17 @@ namespace environment {
 
         auto operator<=>(const XYLocation&) const = default;
         bool operator==(const XYLocation&) const = default;
-
     };
 
-    using Object = std::variant<Wall, XYAgent>;
-    using Tiles = std::vector<Object>;
-    using Map = std::map<XYLocation, Tiles>;
-
-    export struct XYEnvironment {
+    struct XYEnvironment {
         unsigned w_  = 0;
         unsigned h_ = 0;
-        Map map_;
+
+        Agents agents_;
+        XYSpace xyspace_;
     };
 
-    /////////////////// logic ///////////////////////////////  
-
+    ///////////////////////////////////////////////////////////////////////////  
     export std::ostream& operator<<(std::ostream& os, const TypeRef& t) {
         const char* name = (t.type_ == Type::xyagent) ? "xyagent" : "wall";
         return os << "[" << name << ", " << t.id_ << "]";
@@ -80,19 +86,30 @@ namespace environment {
                loc.y_ <= static_cast<int>(env.h_);
     }
 
+    export bool addAgent(Agents& agents, const XYAgent agent)  {
+        return agents.emplace(agent.ref_.id_, agent).second;
+    }
+
+    export bool hasAgent(Agents& agents, const XYAgent agent) {
+        return agents.contains(agent.ref_.id_);
+    }
+
     export bool addAgentToLocation(XYAgent agent, XYEnvironment& env, const XYLocation& loc) {
-        auto it = env.map_.find(loc);
-        if (it == env.map_.end()) return false;
+        auto it = env.xyspace_.find(loc);
+
+        if (it == env.xyspace_.end()) return false;
         if (!it->second.empty()) return false; // will change logic after adding walls, dirt, gold etc.
+                                               //
         it->second.push_back(Object(std::move(agent)));
-        return true;
+        
+        return addAgent(env.agents_, std::move(agent));
     }
 
     export std::optional<TypeRef> getObjectAt(const XYEnvironment& env, const XYLocation& loc) {
         if (!inBounds(env, loc)) return std::nullopt;
 
-        auto it = env.map_.find(loc);
-        if (it == env.map_.end()) return std::nullopt;
+        auto it = env.xyspace_.find(loc);
+        if (it == env.xyspace_.end()) return std::nullopt;
 
         const Tiles& tiles = it->second;
         if (tiles.empty()) return std::nullopt;
@@ -116,7 +133,7 @@ namespace environment {
 
         for (int x = 1; x <= w; ++x) {
             for (int y = 1; y <= h; ++y) {
-                env.map_.emplace(XYLocation(x,y), Tiles()); 
+                env.xyspace_.emplace(XYLocation(x,y), Tiles()); 
             }
         }
 
@@ -124,12 +141,12 @@ namespace environment {
     }
 
     export size_t mapSize(const XYEnvironment& env) {
-        return env.map_.size();
+        return env.xyspace_.size();
     }
 
     export bool isOccupied(const XYEnvironment& env, const XYLocation& loc) {
-        auto it = env.map_.find(loc);
-        return it != env.map_.end() && !it->second.empty(); 
+        auto it = env.xyspace_.find(loc);
+        return it != env.xyspace_.end() && !it->second.empty(); 
     }
 
 } // namespace environment 
