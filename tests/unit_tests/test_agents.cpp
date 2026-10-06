@@ -24,12 +24,12 @@ TEST(XYEnvironmentTest, AddToOccupiedLocationFails) {
     ASSERT_FALSE(addAgentToLocation(XYAgent(), env, loc));
 }
 
-TEST(XyEnvironmentTest, AddOutOfBoundsFails) {
+TEST(XYEnvironmentTest, AddOutOfBoundsFails) {
     auto env = makeXYEnvironment(4, 4);
     ASSERT_FALSE(addAgentToLocation(XYAgent(), env, XYLocation(5, 1)))  ;
 }
 
-TEST(XyEnvironmentTest, AddAgentToLocation) {
+TEST(XYEnvironmentTest, AddAgentToLocation) {
     auto env    = makeXYEnvironment(12, 10);
     auto loc    = XYLocation(3, 4);
     auto agent  = XYAgent();
@@ -43,7 +43,7 @@ TEST(XyEnvironmentTest, AddAgentToLocation) {
     ASSERT_EQ(oss.str(), expected.str());
 }
 
-TEST(XyEnvironmentTest, IsOccupiedAfterAdd) {
+TEST(XYEnvironmentTest, IsOccupiedAfterAdd) {
     auto env = makeXYEnvironment(4, 4);
     auto loc = XYLocation(1, 1);
     addAgentToLocation(XYAgent(), env, loc);
@@ -51,7 +51,7 @@ TEST(XyEnvironmentTest, IsOccupiedAfterAdd) {
     ASSERT_TRUE(isOccupied(env, loc));
 }
 
-TEST(XyEnvironmentTest, AgentIsRegisteredAfterAdd) {
+TEST(XYEnvironmentTest, AgentIsRegisteredAfterAdd) {
     auto env = makeXYEnvironment(12, 10);
     auto loc = XYLocation(6, 6);
     auto agent = XYAgent();
