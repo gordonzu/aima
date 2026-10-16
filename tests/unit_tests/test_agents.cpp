@@ -61,7 +61,25 @@ TEST(XYEnvironmentTest, AgentIsRegisteredAfterAdd) {
     ASSERT_TRUE(hasAgent(env.agents_, agent));
 }
 
+TEST(XYEnvironmentTest, AddSameAgentTwiceFails) {
+    auto env = makeXYEnvironment(12, 10);
+    auto loc = XYLocation(6, 6);
+    auto agent = XYAgent();
 
+    ASSERT_TRUE(addAgentToLocation(agent, env, loc));
+    ASSERT_FALSE(addAgentToLocation(agent, env, loc));
+    ASSERT_EQ(1, (int)env.agents_.size());
+}
+
+TEST(XYEnvironmentTest, AddTwoDifferentAgentsToSameLocationFails) {
+    auto env = makeXYEnvironment(12, 10);
+    auto loc = XYLocation(6, 6);
+    auto agent1 = XYAgent();
+    auto agent2 = XYAgent();
+
+    ASSERT_TRUE(addAgentToLocation(agent1, env, loc));
+    ASSERT_FALSE(addAgentToLocation(agent2, env, loc));
+}
 
 
 

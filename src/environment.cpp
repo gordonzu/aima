@@ -95,9 +95,11 @@ namespace environment {
     export bool addAgentToLocation(XYAgent agent, XYEnvironment& env, const XYLocation& loc) {
         auto it = env.xyspace_.find(loc);
 
+        // some objects can be at the same loc (agent, dirt, gold etc.) Some objects can only be alone (wall)
         if (it == env.xyspace_.end()) return false;
-        if (!it->second.empty()) return false; // will change logic after adding walls, dirt, gold etc.
-                                               //
+        if (!it->second.empty()) return false;  
+        if (hasAgent(env.agents_, agent)) return false;
+
         it->second.push_back(Object(std::move(agent)));
         
         return addAgent(env.agents_, std::move(agent));
