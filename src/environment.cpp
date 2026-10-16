@@ -23,7 +23,6 @@ namespace environment {
     using Agents = std::map<int, XYAgent>;
     using XYSpace = std::map<XYLocation, Tiles>;
 
-    ///////////////////////////////////////////////////////////////////////////
     enum class Type { wall, xyagent };
 
     struct TypeRef { 
@@ -69,7 +68,6 @@ namespace environment {
         XYSpace xyspace_;
     };
 
-    ///////////////////////////////////////////////////////////////////////////  
     export std::ostream& operator<<(std::ostream& os, const TypeRef& t) {
         const char* name = (t.type_ == Type::xyagent) ? "xyagent" : "wall";
         return os << "[" << name << ", " << t.id_ << "]";
