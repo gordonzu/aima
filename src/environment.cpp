@@ -60,6 +60,7 @@ namespace environment {
         bool operator==(const XYLocation&) const = default;
     };
 
+    // should XYEnvironment have a deleted default ctor
     struct XYEnvironment {
         unsigned w_  = 0;
         unsigned h_ = 0;
