@@ -23,51 +23,43 @@ TEST(XYEnvironmentTest, AddAgentToLocation) {
     auto agent  = XYAgent();
     std::ostringstream oss, expected;
 
-    registerAgent(env.agents_, agent);
     ASSERT_TRUE(addAgentToLocation(agent, env, loc));
     oss << getObjectAt(env, loc);
     expected << agent.ref_;
     ASSERT_EQ(oss.str(), expected.str());
 }
 
-TEST(XYEnvironmentTest, LocationIsOccupiedAfterAdd) {
-    auto env = makeXYEnvironment(4, 4);
-    auto loc = XYLocation(1, 1);
-    auto agent = XYAgent();
-    registerAgent(env.agents_, agent);
-
-    ASSERT_TRUE(addAgentToLocation(agent, env, loc));
-    ASSERT_TRUE(isOccupied(env, loc));
-}
-
-TEST(XYEnvironmentTest, UnregisteredAgentFailsToAdd) {
+TEST(XYEnvironmentTest, AgentIsRegisteredAfterAdd) {
     auto env = makeXYEnvironment(12, 10);
     auto loc = XYLocation(6, 6);
     auto agent = XYAgent();
 
-    ASSERT_FALSE(addAgentToLocation(agent, env, loc));
-}
-
-TEST(XYEnvironmentTest, AddAgentTwiceFails) {
-    auto env = makeXYEnvironment(4, 4);
-    auto loc = XYLocation(2, 2);
-    auto agent = XYAgent();
-    registerAgent(env.agents_, agent);
-
     ASSERT_TRUE(addAgentToLocation(agent, env, loc));
-    ASSERT_FALSE(addAgentToLocation(agent, env, loc));
+    ASSERT_TRUE(agentIsRegistered(env.agents_, agent));
 }
 
-TEST(XYEnvironmentTest, AddOutOfBoundsFails) {
-    auto env = makeXYEnvironment(4, 4);
-    ASSERT_FALSE(addAgentToLocation(XYAgent(), env, XYLocation(5, 1)))  ;
+TEST(XYEnvironmentTest, LocationIsOccupiedAfterAdd) { 
+    auto env = makeXYEnvironment(4, 4); 
+    auto loc = XYLocation(1, 1); 
+    auto agent = XYAgent(); 
+
+    ASSERT_TRUE(addAgentToLocation(agent, env, loc)); 
+    ASSERT_TRUE(isOccupied(env, loc)); 
+} 
+
+TEST(XYEnvironmentTest, AddAgentTwiceToSameLocationFails) { 
+    auto env = makeXYEnvironment(4, 4); 
+    auto loc = XYLocation(2, 2); 
+    auto agent = XYAgent(); 
+
+    ASSERT_TRUE(addAgentToLocation(agent, env, loc)); 
+    ASSERT_FALSE(addAgentToLocation(agent, env, loc)); 
+} 
+
+TEST(XYEnvironmentTest, AddOutOfBoundsFails) { 
+    auto env = makeXYEnvironment(4, 4); 
+    ASSERT_FALSE(addAgentToLocation(XYAgent(), env, XYLocation(5, 1)))  ; 
 }
-
-
-
-
-
-
 
 
 

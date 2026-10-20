@@ -101,7 +101,7 @@ namespace environment {
         if (!it->second.empty()) return false; // this will change after walls, dirt, gold etc.
         //////////////////////////////////////////////////////////////////////////////////////
         
-        if (!agentIsRegistered(env.agents_, agent)) return false;
+        if (!registerAgent(env.agents_, agent)) return false;
         it->second.push_back(agent.ref_);
         return true;
     }
