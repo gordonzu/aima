@@ -18,8 +18,7 @@ namespace environment {
     export struct TypeRef;
     export enum class Type;
     
-    using Object = std::variant<Wall, XYAgent>;
-    using Tiles = std::vector<Object>;
+    using Tiles = std::vector<TypeRef>;
     using Agents = std::map<int, XYAgent>;
     using XYSpace = std::map<XYLocation, Tiles>;
 
@@ -52,10 +51,8 @@ namespace environment {
     struct XYLocation {
         int x_ = 0;
         int y_ = 0;
-
         XYLocation() = default;
         XYLocation(int x, int y) : x_(x), y_(y) {}
-
         auto operator<=>(const XYLocation&) const = default;
         bool operator==(const XYLocation&) const = default;
     };
@@ -64,7 +61,6 @@ namespace environment {
     struct XYEnvironment {
         unsigned w_  = 0;
         unsigned h_ = 0;
-
         Agents agents_;
         XYSpace xyspace_;
     };
@@ -85,25 +81,29 @@ namespace environment {
                loc.y_ <= static_cast<int>(env.h_);
     }
 
-    export bool addAgent(Agents& agents, const XYAgent agent)  {
+    export bool registerAgent(Agents& agents, const XYAgent agent)  {
         return agents.emplace(agent.ref_.id_, agent).second;
     }
 
-    export bool hasAgent(Agents& agents, const XYAgent agent) {
+    export bool agentIsRegistered(Agents& agents, const XYAgent agent) {
         return agents.contains(agent.ref_.id_);
     }
 
     export bool addAgentToLocation(XYAgent agent, XYEnvironment& env, const XYLocation& loc) {
         auto it = env.xyspace_.find(loc);
-
-        // some objects can be at the same loc (agent, dirt, gold etc.) Some objects can only be alone (wall)
         if (it == env.xyspace_.end()) return false;
-        if (!it->second.empty()) return false;  
-        if (hasAgent(env.agents_, agent)) return false;
 
-        it->second.push_back(Object(std::move(agent)));
+        //////////////////////////////////////////////////////////////////////////////////////
+        // this will change after walls, dirt, gold etc.
+        // some objects can be at the same loc (agent, dirt, gold etc.) Some objects can only be alone (wall)
+        // right now this is the dupe agent test, and it just checks if *anything* is at the location vector
+        // after walls etc., it will have to do a ref_id test
+        if (!it->second.empty()) return false; // this will change after walls, dirt, gold etc.
+        //////////////////////////////////////////////////////////////////////////////////////
         
-        return addAgent(env.agents_, std::move(agent));
+        if (!agentIsRegistered(env.agents_, agent)) return false;
+        it->second.push_back(agent.ref_);
+        return true;
     }
 
     export std::optional<TypeRef> getObjectAt(const XYEnvironment& env, const XYLocation& loc) {
@@ -115,14 +115,16 @@ namespace environment {
         const Tiles& tiles = it->second;
         if (tiles.empty()) return std::nullopt;
 
-        const Object& obj = tiles.front(); // will change logic to return set when adding more Objects
+        return tiles.front();
 
-        return std::visit(
-            [](const auto& x) -> TypeRef {
-                return x.ref_;
-            },
-            obj
-        );
+   //     const Object& obj = tiles.front(); // will change logic to return set when adding more Objects
+
+        // return std::visit(
+        //     [](const auto& x) -> TypeRef {
+        //         return x.ref_;
+        //     },
+        //     obj
+        // );
     }
     
     export XYEnvironment makeXYEnvironment(int w, int h) {
