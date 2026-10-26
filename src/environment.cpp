@@ -20,6 +20,7 @@ namespace environment {
     
     using Tiles = std::vector<TypeRef>;
     using Agents = std::map<int, XYAgent>;
+    using Locations = std::map<int, XYLocation>;
     using XYSpace = std::map<XYLocation, Tiles>;
 
     enum class Type { wall, xyagent };
@@ -62,6 +63,7 @@ namespace environment {
         unsigned w_  = 0;
         unsigned h_ = 0;
         Agents agents_;
+        Locations locations_;
         XYSpace xyspace_;
     };
 
@@ -89,24 +91,29 @@ namespace environment {
         return agents.contains(agent.ref_.id_);
     }
 
-    export bool addAgentToLocation(XYAgent agent, XYEnvironment& env, const XYLocation& loc) {
+    export bool addObjectToLocation(XYAgent agent, XYEnvironment& env, const XYLocation& loc) {
         auto it = env.xyspace_.find(loc);
         if (it == env.xyspace_.end()) return false;
 
-        //////////////////////////////////////////////////////////////////////////////////////
-        // this will change after walls, dirt, gold etc.
-        // some objects can be at the same loc (agent, dirt, gold etc.) Some objects can only be alone (wall)
-        // right now this is the dupe agent test, and it just checks if *anything* is at the location vector
-        // after walls etc., it will have to do a ref_id test
-        if (!it->second.empty()) return false; // this will change after walls, dirt, gold etc.
-        //////////////////////////////////////////////////////////////////////////////////////
-        
+        if (!it->second.empty()) return false;         
         if (!registerAgent(env.agents_, agent)) return false;
+
         it->second.push_back(agent.ref_);
+        env.locations_[agent.ref_.id_] = loc;
         return true;
     }
 
-    export std::optional<TypeRef> getObjectAt(const XYEnvironment& env, const XYLocation& loc) {
+    export bool moveObjectToLocation(XYAgent agent, XYEnvironment& env, const XYLocation& loc) {
+        auto it = env.xyspace_.find(loc);
+        if (it == env.xyspace_.end()) return false;
+
+        if (!it->second.empty()) return false;         
+        it->second.push_back(agent.ref_);
+        env.locations_[agent.ref_.id_] = loc;
+        return true;
+    }
+
+    export std::optional<TypeRef> getObjectAtLocation(const XYEnvironment& env, const XYLocation& loc) {
         if (!inBounds(env, loc)) return std::nullopt;
 
         auto it = env.xyspace_.find(loc);
@@ -116,15 +123,12 @@ namespace environment {
         if (tiles.empty()) return std::nullopt;
 
         return tiles.front();
+    }
 
-   //     const Object& obj = tiles.front(); // will change logic to return set when adding more Objects
-
-        // return std::visit(
-        //     [](const auto& x) -> TypeRef {
-        //         return x.ref_;
-        //     },
-        //     obj
-        // );
+    export std::optional<XYLocation> getLocationForObject(const XYEnvironment& env, TypeRef t) {
+        auto it = env.locations_.find(t.id_);
+        if (it == env.locations_.end()) return std::nullopt;
+        return it->second;
     }
     
     export XYEnvironment makeXYEnvironment(int w, int h) {
@@ -166,4 +170,42 @@ namespace environment {
 
 
 
+/*export bool addAgentToLocation(XYAgent agent, XYEnvironment& env, const XYLocation& loc) {
+        auto it = env.xyspace_.find(loc);
+        if (it == env.xyspace_.end()) return false;
 
+        //////////////////////////////////////////////////////////////////////////////////////
+        // this will change after walls, dirt, gold etc.
+        // some objects can be at the same loc (agent, dirt, gold etc.) Some objects can only be alone (wall)
+        // right now this is the dupe agent test, and it just checks if *anything* is at the location vector
+        // after walls etc., it will have to do a ref_id test
+        if (!it->second.empty()) return false; // this will change after walls, dirt, gold etc.
+        //////////////////////////////////////////////////////////////////////////////////////
+        
+        if (!registerAgent(env.agents_, agent)) return false;
+        it->second.push_back(agent.ref_);
+        return true;
+    }
+
+    export std::optional<TypeRef> getObjectAt(const XYEnvironment& env, const XYLocation& loc) {
+        if (!inBounds(env, loc)) return std::nullopt;
+
+        auto it = env.xyspace_.find(loc);
+        if (it == env.xyspace_.end()) return std::nullopt;
+
+        const Tiles& tiles = it->second;
+        if (tiles.empty()) return std::nullopt;
+
+        return tiles.front();
+
+   //     const Object& obj = tiles.front(); // will change logic to return set when adding more Objects
+
+        // return std::visit(
+        //     [](const auto& x) -> TypeRef {
+        //         return x.ref_;
+        //     },
+        //     obj
+        // );
+    }
+    
+*/
