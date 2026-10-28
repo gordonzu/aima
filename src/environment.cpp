@@ -94,7 +94,7 @@ namespace environment {
         auto it = env.xyspace_.find(loc);
         if (it == env.xyspace_.end()) return false;
 
-        if (!it->second.empty()) return false;         
+        if (!it->second.empty()) return false; // again, will have to modify this to just search for agent        
         if (!registerAgent(env.agents_, agent)) return false;
 
         it->second.push_back(agent.ref_);
@@ -102,34 +102,31 @@ namespace environment {
         return true;
     }
 
-    export std::optional<XYLocation> getLocationFor(const XYEnvironment& env, TypeRef t) {
+    export std::optional<XYLocation> getLocationFor(const XYEnvironment& env, const TypeRef& t) {
         auto it = env.locations_.find(t.id_);
         if (it == env.locations_.end()) return std::nullopt;
         return it->second;
     }
  
-    export bool moveObjectTo(XYAgent agent, XYEnvironment& env, const XYLocation& newLocation) {
-        auto agentIdItr = env.locations_.find(agent.ref_.id_);
-        if (agentIdItr == env.locations_.end()) return false;
+    export bool moveObjectTo(const TypeRef& ref, XYEnvironment& env, const XYLocation& newLocation) {
+        auto refIdItr = env.locations_.find(ref.id_);
+        if (refIdItr == env.locations_.end()) return false;
 
         auto newLocItr = env.xyspace_.find(newLocation);
         if (newLocItr == env.xyspace_.end()) return false;
-
-        if (!newLocItr->second.empty()) return false; // this will have to change to a check for the agent.ref_.id
+        if (!newLocItr->second.empty()) return false; // this will have to change to a search for agent
         
-        auto oldLocation = (getLocationFor(env, agent.ref_));
+        auto oldLocation = (getLocationFor(env, ref));
         if (!oldLocation) return false;
         auto oldLocItr = env.xyspace_.find(*oldLocation);
 
         if (oldLocItr == env.xyspace_.end()) return false;
         
         Tiles& tiles = oldLocItr->second;
+        std::erase_if(tiles, [&](const TypeRef& r) { return r.id_ == ref.id_; }); // how will I guard against agent dupes
 
-        std::erase_if(tiles, [&](const TypeRef& r) { return r.id_ == agent.ref_.id_; }); // how will I guard against agent dupes
-
-        newLocItr->second.push_back(agent.ref_);
-
-        agentIdItr->second = newLocation;
+        newLocItr->second.push_back(ref);
+        refIdItr->second = newLocation;
         return true;
     }
 

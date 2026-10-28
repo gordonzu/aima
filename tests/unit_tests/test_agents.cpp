@@ -135,7 +135,7 @@ TEST_F(XYEnvironmentAgentTest, MoveToEmptyLocationVacatesSource) {
     XYAgent agent;
 
     ASSERT_TRUE(addObjectTo(agent, env, source));
-    ASSERT_TRUE(moveObjectTo(agent, env, destination));
+    ASSERT_TRUE(moveObjectTo(agent.ref_, env, destination));
 
     EXPECT_FALSE(isOccupied(env, source));
     EXPECT_TRUE(isOccupied(env, destination));
@@ -154,7 +154,7 @@ TEST_F(XYEnvironmentAgentTest, MoveRejectsOccupiedDestinationWithoutChangingStat
     ASSERT_TRUE(addObjectTo(moving, env, source));
     ASSERT_TRUE(addObjectTo(stationary, env, destination));
 
-    EXPECT_FALSE(moveObjectTo(moving, env, destination));
+    EXPECT_FALSE(moveObjectTo(moving.ref_, env, destination));
 
     EXPECT_TRUE(isOccupied(env, source));
     EXPECT_TRUE(isOccupied(env, destination));
@@ -174,7 +174,7 @@ TEST_F(XYEnvironmentAgentTest, MoveRejectsOutOfBoundsDestinationWithoutChangingS
     XYAgent agent;
 
     ASSERT_TRUE(addObjectTo(agent, env, source));
-    EXPECT_FALSE(moveObjectTo(agent, env, XYLocation(5, 1)));
+    EXPECT_FALSE(moveObjectTo(agent.ref_, env, XYLocation(5, 1)));
 
     EXPECT_TRUE(isOccupied(env, source));
     ASSERT_TRUE(getLocationFor(env, agent.ref_).has_value());
@@ -195,7 +195,7 @@ TEST_F(XYEnvironmentAgentTest, MoveToCurrentLocationFailsWithoutChangingState) {
     XYAgent agent;
 
     ASSERT_TRUE(addObjectTo(agent, env, source));
-    EXPECT_FALSE(moveObjectTo(agent, env, source));
+    EXPECT_FALSE(moveObjectTo(agent.ref_, env, source));
 
     EXPECT_TRUE(isOccupied(env, source));
     EXPECT_FALSE(isOccupied(env, destination));
