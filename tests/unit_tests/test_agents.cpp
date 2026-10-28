@@ -1,5 +1,4 @@
 #include <gtest/gtest.h> 
-#include <sstream>
 #include <sys/ucontext.h>
 
 import aima.environment;
@@ -53,18 +52,18 @@ TEST_F(XYEnvironmentTest, EmptyAndOccupiedQueriesAgree) {
     const XYLocation loc{2, 2};
     XYAgent agent;
 
-    EXPECT_FALSE(getObjectAtLocation(env, loc).has_value());
+    EXPECT_FALSE(getObjectAt(env, loc).has_value());
     EXPECT_FALSE(isOccupied(env, loc));
 
-    ASSERT_TRUE(addObjectToLocation(agent, env, loc));
-    EXPECT_TRUE(getObjectAtLocation(env, loc).has_value());
+    ASSERT_TRUE(addObjectTo(agent, env, loc));
+    EXPECT_TRUE(getObjectAt(env, loc).has_value());
     EXPECT_TRUE(isOccupied(env, loc));
 }
 
 TEST_F(XYEnvironmentTest, OutOfBoundsQueriesReturnNoObjectAndAreNotOccupied) {
     for (const XYLocation loc : {XYLocation(0, 1), XYLocation(1, 0),
                                  XYLocation(5, 1), XYLocation(1, 5)}) {
-        EXPECT_FALSE(getObjectAtLocation(env, loc).has_value());
+        EXPECT_FALSE(getObjectAt(env, loc).has_value());
         EXPECT_FALSE(isOccupied(env, loc));
     }
 }
@@ -72,14 +71,14 @@ TEST_F(XYEnvironmentTest, OutOfBoundsQueriesReturnNoObjectAndAreNotOccupied) {
 TEST_F(XYEnvironmentAgentTest, AddRegistersAgentAndRecordsLocation) {
     XYAgent agent;
 
-    ASSERT_TRUE(addObjectToLocation(agent, env, source));
+    ASSERT_TRUE(addObjectTo(agent, env, source));
 
     EXPECT_TRUE(agentIsRegistered(env.agents_, agent));
-    ASSERT_TRUE(getLocationForObject(env, agent.ref_).has_value());
-    EXPECT_EQ(getLocationForObject(env, agent.ref_).value(), source);
+    ASSERT_TRUE(getLocationFor(env, agent.ref_).has_value());
+    EXPECT_EQ(getLocationFor(env, agent.ref_).value(), source);
     EXPECT_TRUE(isOccupied(env, source));
 
-    const auto object = getObjectAtLocation(env, source);
+    const auto object = getObjectAt(env, source);
     ASSERT_TRUE(object.has_value());
     EXPECT_EQ(object->type_, Type::xyagent);
     EXPECT_EQ(object->id_, agent.ref_.id_);
@@ -89,17 +88,17 @@ TEST_F(XYEnvironmentAgentTest, AddRejectsOccupiedLocationWithoutChangingState) {
     XYAgent first;
     XYAgent second;
 
-    ASSERT_TRUE(addObjectToLocation(first, env, source));
-    EXPECT_FALSE(addObjectToLocation(second, env, source));
+    ASSERT_TRUE(addObjectTo(first, env, source));
+    EXPECT_FALSE(addObjectTo(second, env, source));
 
     EXPECT_TRUE(agentIsRegistered(env.agents_, first));
     EXPECT_FALSE(agentIsRegistered(env.agents_, second));
-    ASSERT_TRUE(getLocationForObject(env, first.ref_).has_value());
-    EXPECT_EQ(getLocationForObject(env, first.ref_).value(), source);
-    EXPECT_FALSE(getLocationForObject(env, second.ref_).has_value());
+    ASSERT_TRUE(getLocationFor(env, first.ref_).has_value());
+    EXPECT_EQ(getLocationFor(env, first.ref_).value(), source);
+    EXPECT_FALSE(getLocationFor(env, second.ref_).has_value());
     EXPECT_FALSE(isOccupied(env, destination));
     
-    const auto object = getObjectAtLocation(env, source);
+    const auto object = getObjectAt(env, source);
     ASSERT_TRUE(object.has_value());
     EXPECT_EQ(object->id_, first.ref_.id_);
 }
@@ -107,11 +106,11 @@ TEST_F(XYEnvironmentAgentTest, AddRejectsOccupiedLocationWithoutChangingState) {
 TEST_F(XYEnvironmentAgentTest, AddRejectsAlreadyRegisteredAgentAtAnotherLocation) {
     XYAgent agent;
 
-    ASSERT_TRUE(addObjectToLocation(agent, env, source));
-    EXPECT_FALSE(addObjectToLocation(agent, env, destination));
+    ASSERT_TRUE(addObjectTo(agent, env, source));
+    EXPECT_FALSE(addObjectTo(agent, env, destination));
 
-    ASSERT_TRUE(getLocationForObject(env, agent.ref_).has_value());
-    EXPECT_EQ(getLocationForObject(env, agent.ref_).value(), source);
+    ASSERT_TRUE(getLocationFor(env, agent.ref_).has_value());
+    EXPECT_EQ(getLocationFor(env, agent.ref_).value(), source);
     EXPECT_TRUE(isOccupied(env, source));
     EXPECT_FALSE(isOccupied(env, destination));
 }
@@ -119,51 +118,51 @@ TEST_F(XYEnvironmentAgentTest, AddRejectsAlreadyRegisteredAgentAtAnotherLocation
 TEST_F(XYEnvironmentAgentTest, AddRejectsOutOfBoundsLocationWithoutRegisteringAgent) {
     XYAgent agent;
 
-    EXPECT_FALSE(addObjectToLocation(agent, env, XYLocation(5, 1)));
+    EXPECT_FALSE(addObjectTo(agent, env, XYLocation(5, 1)));
     EXPECT_FALSE(agentIsRegistered(env.agents_, agent));
-    EXPECT_FALSE(getLocationForObject(env, agent.ref_).has_value());
+    EXPECT_FALSE(getLocationFor(env, agent.ref_).has_value());
 }
 
 TEST_F(XYEnvironmentAgentTest, AddAcceptsBoundaryLocations) {
     XYAgent first;
     XYAgent last;
 
-    EXPECT_TRUE(addObjectToLocation(first, env, XYLocation(1, 1)));
-    EXPECT_TRUE(addObjectToLocation(last, env, XYLocation(4, 4)));
+    EXPECT_TRUE(addObjectTo(first, env, XYLocation(1, 1)));
+    EXPECT_TRUE(addObjectTo(last, env, XYLocation(4, 4)));
 }
 
-/*TEST_F(XYEnvironmentAgentTest, MoveToEmptyLocationVacatesSource) {
+TEST_F(XYEnvironmentAgentTest, MoveToEmptyLocationVacatesSource) {
     XYAgent agent;
 
-    ASSERT_TRUE(addObjectToLocation(agent, env, source));
-    ASSERT_TRUE(moveObjectToLocation(agent, env, destination));
+    ASSERT_TRUE(addObjectTo(agent, env, source));
+    ASSERT_TRUE(moveObjectTo(agent, env, destination));
 
     EXPECT_FALSE(isOccupied(env, source));
     EXPECT_TRUE(isOccupied(env, destination));
-    ASSERT_TRUE(getLocationForObject(env, agent.ref_).has_value());
-    EXPECT_EQ(getLocationForObject(env, agent.ref_).value(), destination);
+    ASSERT_TRUE(getLocationFor(env, agent.ref_).has_value());
+    EXPECT_EQ(getLocationFor(env, agent.ref_).value(), destination);
 
-    const auto object = getObjectAtLocation(env, destination);
+    const auto object = getObjectAt(env, destination);
     ASSERT_TRUE(object.has_value());
     EXPECT_EQ(object->id_, agent.ref_.id_);
-}*/ 
+} 
 
 TEST_F(XYEnvironmentAgentTest, MoveRejectsOccupiedDestinationWithoutChangingState) {
     XYAgent moving;
     XYAgent stationary;
 
-    ASSERT_TRUE(addObjectToLocation(moving, env, source));
-    ASSERT_TRUE(addObjectToLocation(stationary, env, destination));
+    ASSERT_TRUE(addObjectTo(moving, env, source));
+    ASSERT_TRUE(addObjectTo(stationary, env, destination));
 
-    EXPECT_FALSE(moveObjectToLocation(moving, env, destination));
+    EXPECT_FALSE(moveObjectTo(moving, env, destination));
 
     EXPECT_TRUE(isOccupied(env, source));
     EXPECT_TRUE(isOccupied(env, destination));
-    ASSERT_TRUE(getLocationForObject(env, moving.ref_).has_value());
-    EXPECT_EQ(getLocationForObject(env, moving.ref_).value(), source);
+    ASSERT_TRUE(getLocationFor(env, moving.ref_).has_value());
+    EXPECT_EQ(getLocationFor(env, moving.ref_).value(), source);
 
-    const auto sourceObject = getObjectAtLocation(env, source);
-    const auto destinationObject = getObjectAtLocation(env, destination);
+    const auto sourceObject = getObjectAt(env, source);
+    const auto destinationObject = getObjectAt(env, destination);
 
     ASSERT_TRUE(sourceObject.has_value());
     ASSERT_TRUE(destinationObject.has_value());
@@ -174,34 +173,34 @@ TEST_F(XYEnvironmentAgentTest, MoveRejectsOccupiedDestinationWithoutChangingStat
 TEST_F(XYEnvironmentAgentTest, MoveRejectsOutOfBoundsDestinationWithoutChangingState) {
     XYAgent agent;
 
-    ASSERT_TRUE(addObjectToLocation(agent, env, source));
-    EXPECT_FALSE(moveObjectToLocation(agent, env, XYLocation(5, 1)));
+    ASSERT_TRUE(addObjectTo(agent, env, source));
+    EXPECT_FALSE(moveObjectTo(agent, env, XYLocation(5, 1)));
 
     EXPECT_TRUE(isOccupied(env, source));
-    ASSERT_TRUE(getLocationForObject(env, agent.ref_).has_value());
-    EXPECT_EQ(getLocationForObject(env, agent.ref_).value(), source);
+    ASSERT_TRUE(getLocationFor(env, agent.ref_).has_value());
+    EXPECT_EQ(getLocationFor(env, agent.ref_).value(), source);
 }
 
 /*TEST_F(XYEnvironmentAgentTest, MoveRejectsUnregisteredAgent) {
     XYAgent agent;
 
-    EXPECT_FALSE(moveObjectToLocation(agent, env, destination));
+    EXPECT_FALSE(moveObjectTo(agent, env, destination));
 
     EXPECT_FALSE(agentIsRegistered(env.agents_, agent));
-    EXPECT_FALSE(getLocationForObject(env, agent.ref_).has_value());
+    EXPECT_FALSE(getLocationFor(env, agent.ref_).has_value());
     EXPECT_FALSE(isOccupied(env, destination));
 }*/
 
 TEST_F(XYEnvironmentAgentTest, MoveToCurrentLocationFailsWithoutChangingState) {
     XYAgent agent;
 
-    ASSERT_TRUE(addObjectToLocation(agent, env, source));
-    EXPECT_FALSE(moveObjectToLocation(agent, env, source));
+    ASSERT_TRUE(addObjectTo(agent, env, source));
+    EXPECT_FALSE(moveObjectTo(agent, env, source));
 
     EXPECT_TRUE(isOccupied(env, source));
     EXPECT_FALSE(isOccupied(env, destination));
-    ASSERT_TRUE(getLocationForObject(env, agent.ref_).has_value());
-    EXPECT_EQ(getLocationForObject(env, agent.ref_).value(), source);
+    ASSERT_TRUE(getLocationFor(env, agent.ref_).has_value());
+    EXPECT_EQ(getLocationFor(env, agent.ref_).value(), source);
 }
 
 
@@ -231,7 +230,7 @@ TEST(XYEnvironmentTest, ConstructMatrix) {
 
 TEST(XYEnvironmentTest, EmptyLocationIsUnoccupied) {
     auto env = makeXYEnvironment(4, 4);
-    ASSERT_FALSE(getObjectAtLocation(env, XYLocation(2, 2)).has_value());
+    ASSERT_FALSE(getObjectAt(env, XYLocation(2, 2)).has_value());
     ASSERT_FALSE(isOccupied(env, XYLocation(2, 2)));
 }
 
@@ -241,8 +240,8 @@ TEST(XYEnvironmentTest, AddAgentToLocation) {
     XYAgent agent;
     std::ostringstream oss, expected;
 
-    ASSERT_TRUE(addObjectToLocation(agent, env, loc));
-    oss << getObjectAtLocation(env, loc);
+    ASSERT_TRUE(addObjectTo(agent, env, loc));
+    oss << getObjectAt(env, loc);
     expected << agent.ref_;
     ASSERT_EQ(oss.str(), expected.str());
 }
@@ -252,7 +251,7 @@ TEST(XYEnvironmentTest, AgentIsRegisteredAfterAdd) {
     XYLocation loc(6, 6);
     XYAgent agent;
 
-    ASSERT_TRUE(addObjectToLocation(agent, env, loc));
+    ASSERT_TRUE(addObjectTo(agent, env, loc));
     ASSERT_TRUE(agentIsRegistered(env.agents_, agent));
 }
 
@@ -261,7 +260,7 @@ TEST(XYEnvironmentTest, LocationIsOccupiedAfterAdd) {
     XYLocation loc(1, 1); 
     XYAgent agent; 
 
-    ASSERT_TRUE(addObjectToLocation(agent, env, loc)); 
+    ASSERT_TRUE(addObjectTo(agent, env, loc)); 
     ASSERT_TRUE(isOccupied(env, loc)); 
 } 
 
@@ -270,14 +269,14 @@ TEST(XYEnvironmentTest, AddAgentTwiceToSameLocationFails) {
     XYLocation loc(2,2); 
     XYAgent agent; 
 
-    ASSERT_TRUE(addObjectToLocation(agent, env, loc)); 
-    ASSERT_FALSE(addObjectToLocation(agent, env, loc)); 
+    ASSERT_TRUE(addObjectTo(agent, env, loc)); 
+    ASSERT_FALSE(addObjectTo(agent, env, loc)); 
 } 
 
 TEST(XYEnvironmentTest, AddOutOfBoundsFails) { 
     auto env = makeXYEnvironment(4, 4); 
 
-    ASSERT_FALSE(addObjectToLocation(XYAgent(), env, XYLocation(5,1))); 
+    ASSERT_FALSE(addObjectTo(XYAgent(), env, XYLocation(5,1))); 
 }
 
 // should agent registration happen on agent creation or when agent is added to a location????
@@ -288,11 +287,11 @@ TEST(XYEnvironmentTest, AgentCanMoveToAbsoluteLocation) {
     XYLocation loc1(2, 2);
     XYLocation loc2(6, 7);
 
-    addObjectToLocation(agent, env, loc1);
-    ASSERT_EQ(loc1, getLocationForObject(env, agent.ref_));
+    addObjectTo(agent, env, loc1);
+    ASSERT_EQ(loc1, getLocationFor(env, agent.ref_));
 
-    moveObjectToLocation(agent, env, loc2);
-    ASSERT_EQ(loc2, getLocationForObject(env, agent.ref_));
+    moveObjectTo(agent, env, loc2);
+    ASSERT_EQ(loc2, getLocationFor(env, agent.ref_));
 }
 */
 

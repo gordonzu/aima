@@ -2,7 +2,6 @@ module;
 
 #include <cstddef>
 #include <stdexcept>
-#include <variant>
 #include <map>
 #include <optional>
 #include <iostream>
@@ -91,7 +90,7 @@ namespace environment {
         return agents.contains(agent.ref_.id_);
     }
 
-    export bool addObjectToLocation(XYAgent agent, XYEnvironment& env, const XYLocation& loc) {
+    export bool addObjectTo(XYAgent agent, XYEnvironment& env, const XYLocation& loc) {
         auto it = env.xyspace_.find(loc);
         if (it == env.xyspace_.end()) return false;
 
@@ -103,17 +102,38 @@ namespace environment {
         return true;
     }
 
-    export bool moveObjectToLocation(XYAgent agent, XYEnvironment& env, const XYLocation& loc) {
-        auto it = env.xyspace_.find(loc);
-        if (it == env.xyspace_.end()) return false;
+    export std::optional<XYLocation> getLocationFor(const XYEnvironment& env, TypeRef t) {
+        auto it = env.locations_.find(t.id_);
+        if (it == env.locations_.end()) return std::nullopt;
+        return it->second;
+    }
+ 
+    export bool moveObjectTo(XYAgent agent, XYEnvironment& env, const XYLocation& newLocation) {
+        auto agentIdItr = env.locations_.find(agent.ref_.id_);
+        if (agentIdItr == env.locations_.end()) return false;
 
-        if (!it->second.empty()) return false;         
-        it->second.push_back(agent.ref_);
-        env.locations_[agent.ref_.id_] = loc;
+        auto newLocItr = env.xyspace_.find(newLocation);
+        if (newLocItr == env.xyspace_.end()) return false;
+
+        if (!newLocItr->second.empty()) return false; // this will have to change to a check for the agent.ref_.id
+        
+        auto oldLocation = (getLocationFor(env, agent.ref_));
+        if (!oldLocation) return false;
+        auto oldLocItr = env.xyspace_.find(*oldLocation);
+
+        if (oldLocItr == env.xyspace_.end()) return false;
+        
+        Tiles& tiles = oldLocItr->second;
+
+        std::erase_if(tiles, [&](const TypeRef& r) { return r.id_ == agent.ref_.id_; }); // how will I guard against agent dupes
+
+        newLocItr->second.push_back(agent.ref_);
+
+        agentIdItr->second = newLocation;
         return true;
     }
 
-    export std::optional<TypeRef> getObjectAtLocation(const XYEnvironment& env, const XYLocation& loc) {
+    export std::optional<TypeRef> getObjectAt(const XYEnvironment& env, const XYLocation& loc) {
         if (!inBounds(env, loc)) return std::nullopt;
 
         auto it = env.xyspace_.find(loc);
@@ -125,12 +145,7 @@ namespace environment {
         return tiles.front();
     }
 
-    export std::optional<XYLocation> getLocationForObject(const XYEnvironment& env, TypeRef t) {
-        auto it = env.locations_.find(t.id_);
-        if (it == env.locations_.end()) return std::nullopt;
-        return it->second;
-    }
-    
+   
     export XYEnvironment makeXYEnvironment(int w, int h) {
         if (w <= 0 || h <= 0) throw std::invalid_argument("params must be > 0");
 
