@@ -181,15 +181,15 @@ TEST_F(XYEnvironmentAgentTest, MoveRejectsOutOfBoundsDestinationWithoutChangingS
     EXPECT_EQ(getLocationFor(env, agent.ref_).value(), source);
 }
 
-/*TEST_F(XYEnvironmentAgentTest, MoveRejectsUnregisteredAgent) {
+TEST_F(XYEnvironmentAgentTest, MoveRejectsUnregisteredAgent) {
     XYAgent agent;
 
-    EXPECT_FALSE(moveObjectTo(agent, env, destination));
+    EXPECT_FALSE(moveObjectTo(agent.ref_, env, destination));
 
     EXPECT_FALSE(agentIsRegistered(env.agents_, agent));
     EXPECT_FALSE(getLocationFor(env, agent.ref_).has_value());
     EXPECT_FALSE(isOccupied(env, destination));
-}*/
+}
 
 TEST_F(XYEnvironmentAgentTest, MoveToCurrentLocationFailsWithoutChangingState) {
     XYAgent agent;
