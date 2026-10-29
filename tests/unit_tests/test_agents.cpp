@@ -74,8 +74,8 @@ TEST_F(XYEnvironmentAgentTest, AddRegistersAgentAndRecordsLocation) {
     ASSERT_TRUE(addObjectTo(agent, env, source));
 
     EXPECT_TRUE(agentIsRegistered(env.agents_, agent));
-    ASSERT_TRUE(getLocationFor(env, agent.ref_).has_value());
-    EXPECT_EQ(getLocationFor(env, agent.ref_).value(), source);
+    ASSERT_TRUE(getLocationFor(agent.ref_, env).has_value());
+    EXPECT_EQ(getLocationFor(agent.ref_, env).value(), source);
     EXPECT_TRUE(isOccupied(env, source));
 
     const auto object = getObjectAt(env, source);
@@ -93,9 +93,9 @@ TEST_F(XYEnvironmentAgentTest, AddRejectsOccupiedLocationWithoutChangingState) {
 
     EXPECT_TRUE(agentIsRegistered(env.agents_, first));
     EXPECT_FALSE(agentIsRegistered(env.agents_, second));
-    ASSERT_TRUE(getLocationFor(env, first.ref_).has_value());
-    EXPECT_EQ(getLocationFor(env, first.ref_).value(), source);
-    EXPECT_FALSE(getLocationFor(env, second.ref_).has_value());
+    ASSERT_TRUE(getLocationFor(first.ref_, env).has_value());
+    EXPECT_EQ(getLocationFor(first.ref_, env).value(), source);
+    EXPECT_FALSE(getLocationFor(second.ref_, env).has_value());
     EXPECT_FALSE(isOccupied(env, destination));
     
     const auto object = getObjectAt(env, source);
@@ -109,8 +109,8 @@ TEST_F(XYEnvironmentAgentTest, AddRejectsAlreadyRegisteredAgentAtAnotherLocation
     ASSERT_TRUE(addObjectTo(agent, env, source));
     EXPECT_FALSE(addObjectTo(agent, env, destination));
 
-    ASSERT_TRUE(getLocationFor(env, agent.ref_).has_value());
-    EXPECT_EQ(getLocationFor(env, agent.ref_).value(), source);
+    ASSERT_TRUE(getLocationFor(agent.ref_, env).has_value());
+    EXPECT_EQ(getLocationFor(agent.ref_, env).value(), source);
     EXPECT_TRUE(isOccupied(env, source));
     EXPECT_FALSE(isOccupied(env, destination));
 }
@@ -120,7 +120,7 @@ TEST_F(XYEnvironmentAgentTest, AddRejectsOutOfBoundsLocationWithoutRegisteringAg
 
     EXPECT_FALSE(addObjectTo(agent, env, XYLocation(11, 1)));
     EXPECT_FALSE(agentIsRegistered(env.agents_, agent));
-    EXPECT_FALSE(getLocationFor(env, agent.ref_).has_value());
+    EXPECT_FALSE(getLocationFor(agent.ref_, env).has_value());
 }
 
 TEST_F(XYEnvironmentAgentTest, AddAcceptsBoundaryLocations) {
@@ -139,8 +139,8 @@ TEST_F(XYEnvironmentAgentTest, MoveToEmptyLocationVacatesSource) {
 
     EXPECT_FALSE(isOccupied(env, source));
     EXPECT_TRUE(isOccupied(env, destination));
-    ASSERT_TRUE(getLocationFor(env, agent.ref_).has_value());
-    EXPECT_EQ(getLocationFor(env, agent.ref_).value(), destination);
+    ASSERT_TRUE(getLocationFor(agent.ref_, env).has_value());
+    EXPECT_EQ(getLocationFor(agent.ref_, env).value(), destination);
 
     const auto object = getObjectAt(env, destination);
     ASSERT_TRUE(object.has_value());
@@ -158,8 +158,8 @@ TEST_F(XYEnvironmentAgentTest, MoveRejectsOccupiedDestinationWithoutChangingStat
 
     EXPECT_TRUE(isOccupied(env, source));
     EXPECT_TRUE(isOccupied(env, destination));
-    ASSERT_TRUE(getLocationFor(env, moving.ref_).has_value());
-    EXPECT_EQ(getLocationFor(env, moving.ref_).value(), source);
+    ASSERT_TRUE(getLocationFor(moving.ref_, env).has_value());
+    EXPECT_EQ(getLocationFor(moving.ref_, env).value(), source);
 
     const auto sourceObject = getObjectAt(env, source);
     const auto destinationObject = getObjectAt(env, destination);
@@ -177,8 +177,8 @@ TEST_F(XYEnvironmentAgentTest, MoveRejectsOutOfBoundsDestinationWithoutChangingS
     EXPECT_FALSE(moveObjectTo(agent.ref_, env, XYLocation(11, 1)));
 
     EXPECT_TRUE(isOccupied(env, source));
-    ASSERT_TRUE(getLocationFor(env, agent.ref_).has_value());
-    EXPECT_EQ(getLocationFor(env, agent.ref_).value(), source);
+    ASSERT_TRUE(getLocationFor(agent.ref_, env).has_value());
+    EXPECT_EQ(getLocationFor(agent.ref_, env).value(), source);
 }
 
 TEST_F(XYEnvironmentAgentTest, MoveRejectsUnregisteredAgent) {
@@ -187,7 +187,7 @@ TEST_F(XYEnvironmentAgentTest, MoveRejectsUnregisteredAgent) {
     EXPECT_FALSE(moveObjectTo(agent.ref_, env, destination));
 
     EXPECT_FALSE(agentIsRegistered(env.agents_, agent));
-    EXPECT_FALSE(getLocationFor(env, agent.ref_).has_value());
+    EXPECT_FALSE(getLocationFor(agent.ref_, env).has_value());
     EXPECT_FALSE(isOccupied(env, destination));
 }
 
@@ -199,17 +199,45 @@ TEST_F(XYEnvironmentAgentTest, MoveToCurrentLocationFailsWithoutChangingState) {
 
     EXPECT_TRUE(isOccupied(env, source));
     EXPECT_FALSE(isOccupied(env, destination));
-    ASSERT_TRUE(getLocationFor(env, agent.ref_).has_value());
-    EXPECT_EQ(getLocationFor(env, agent.ref_).value(), source);
+    ASSERT_TRUE(getLocationFor(agent.ref_, env).has_value());
+    EXPECT_EQ(getLocationFor(agent.ref_, env).value(), source);
 }
 
-TEST_F(XYEnvironmentAgentTest, MoveInDirectionSucceeds) {
+TEST_F(XYEnvironmentAgentTest, MoveInDirectionToEmptyLocationSucceeds) {
+    XYAgent agent;
+    XYLocation nloc(2, 3), sloc(2, 2), eloc(3, 2), wloc(2, 2);
+
+    ASSERT_TRUE(addObjectTo(agent, env, source));
+
+    ASSERT_TRUE(moveObject(agent.ref_, env, Direction::north));
+    ASSERT_TRUE(isOccupied(env, nloc));
+    EXPECT_FALSE(isOccupied(env, source));
+
+    ASSERT_TRUE(moveObject(agent.ref_, env, Direction::south));
+    ASSERT_TRUE(isOccupied(env, sloc));
+    EXPECT_TRUE(isOccupied(env, source));
+
+    ASSERT_TRUE(moveObject(agent.ref_, env, Direction::east));
+    ASSERT_TRUE(isOccupied(env, eloc));
+    EXPECT_FALSE(isOccupied(env, source));
+
+    ASSERT_TRUE(moveObject(agent.ref_, env, Direction::west));
+    ASSERT_TRUE(isOccupied(env, wloc));
+    EXPECT_TRUE(isOccupied(env, source));
+}
+
+TEST_F(XYEnvironmentAgentTest, MoveInDirectionToNonEmptyLocationFails) {
     XYAgent agent1;
     XYAgent agent2;
+    XYLocation loc1(2, 3);
 
-    SUCCEED();
-    //ASSERT_TRUE(addObjectTo(agent1, env, source));
-    //ASSERT_TRUE(moveObject(agent1, env, Direction::north));
+    ASSERT_TRUE(addObjectTo(agent1, env, source));
+    ASSERT_TRUE(isOccupied(env, source));
+    ASSERT_TRUE(addObjectTo(agent2, env, loc1));
+    ASSERT_TRUE(isOccupied(env, loc1));
+
+    EXPECT_FALSE(moveObject(agent1.ref_, env, Direction::north));
+    EXPECT_EQ(source, *(getLocationFor(agent1.ref_, env)));       
 }
 
 

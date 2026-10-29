@@ -104,34 +104,13 @@ namespace environment {
         return true;
     }
 
-    export std::optional<XYLocation> getLocationFor(const XYEnvironment& env, const TypeRef& t) {
+    export std::optional<XYLocation> getLocationFor(const TypeRef& t, const XYEnvironment& env) {
         auto it = env.locations_.find(t.id_);
         if (it == env.locations_.end()) return std::nullopt;
         return it->second;
     }
  
-    export bool moveObjectTo(const TypeRef& ref, XYEnvironment& env, const XYLocation& newLocation) {
-        auto refIdItr = env.locations_.find(ref.id_);
-        if (refIdItr == env.locations_.end()) return false;
-
-        auto newLocItr = env.xyspace_.find(newLocation);
-        if (newLocItr == env.xyspace_.end()) return false;
-        if (!newLocItr->second.empty()) return false; // this will have to change to a search for agent
-        
-        auto oldLocation = (getLocationFor(env, ref));
-        if (!oldLocation) return false;
-        auto oldLocItr = env.xyspace_.find(*oldLocation);
-
-        if (oldLocItr == env.xyspace_.end()) return false;
-        
-        Tiles& tiles = oldLocItr->second;
-        std::erase_if(tiles, [&](const TypeRef& r) { return r.id_ == ref.id_; }); // how will I guard against agent dupes
-
-        newLocItr->second.push_back(ref);
-        refIdItr->second = newLocation;
-        return true;
-    }
-
+    
     export std::optional<TypeRef> getObjectAt(const XYEnvironment& env, const XYLocation& loc) {
         if (!inBounds(env, loc)) return std::nullopt;
 
@@ -144,7 +123,6 @@ namespace environment {
         return tiles.front();
     }
 
-   
     export XYEnvironment makeXYEnvironment(int w, int h) {
         if (w <= 0 || h <= 0) throw std::invalid_argument("params must be > 0");
 
@@ -170,8 +148,59 @@ namespace environment {
         return it != env.xyspace_.end() && !it->second.empty(); 
     }
 
-    export bool moveObject(XYAgent& agent, XYEnvironment& env, Direction dir) {
+    export bool moveObjectTo(const TypeRef& ref, XYEnvironment& env, const XYLocation& newLocation) {
+        auto refIdItr = env.locations_.find(ref.id_);
+        if (refIdItr == env.locations_.end()) return false;
+
+        auto newLocItr = env.xyspace_.find(newLocation);
+        if (newLocItr == env.xyspace_.end()) return false;
+        if (!newLocItr->second.empty()) return false; // this will have to change to a search for agent
+        
+        auto oldLocation = (getLocationFor(ref, env));
+        if (!oldLocation) return false;
+        auto oldLocItr = env.xyspace_.find(*oldLocation);
+
+        if (oldLocItr == env.xyspace_.end()) return false;
+        
+        Tiles& tiles = oldLocItr->second;
+        std::erase_if(tiles, [&](const TypeRef& r) { return r.id_ == ref.id_; }); // how will I guard against agent dupes
+
+        newLocItr->second.push_back(ref);
+        refIdItr->second = newLocation;
         return true;
+    }
+
+    export bool moveObject(TypeRef& ref, XYEnvironment& env, Direction dir) {
+        XYLocation newLoc, oldLoc = *(getLocationFor(ref, env));
+        try {
+            switch (dir) {
+                case Direction::north:
+                     newLoc.x_ = oldLoc.x_;
+                     newLoc.y_ = oldLoc.y_ + 1;
+                     break;
+                case Direction::south:
+                     newLoc.x_ = oldLoc.x_;
+                     newLoc.y_ = oldLoc.y_ - 1;
+                     break;
+                case Direction::east:
+                     newLoc.x_ = oldLoc.x_ + 1;
+                     newLoc.y_ = oldLoc.y_;
+                     break;
+                case Direction::west:
+                     newLoc.x_ = oldLoc.x_ - 1;
+                     newLoc.y_ = oldLoc.y_;
+                     break;
+                default: throw std::runtime_error("Unknown direction");
+                         return false;
+
+            }        
+        }
+        catch (const std::exception& e) {
+            std::cerr << "Exception: " << e.what() << "\n";
+        }
+
+        if (moveObjectTo(ref, env, newLoc)) return true;
+        return false;
     }
 
 
