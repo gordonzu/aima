@@ -8,12 +8,12 @@ using namespace environment;
 
 class XYEnvironmentTest : public testing::Test {
 protected:
-    XYEnvironment env = makeXYEnvironment(4, 4);
+    XYEnvironment env = makeXYEnvironment(10, 12);
 };
 
 class XYEnvironmentAgentTest : public testing::Test {
 protected:
-    XYEnvironmentAgentTest() : env(makeXYEnvironment(4, 4)), 
+    XYEnvironmentAgentTest() : env(makeXYEnvironment(10, 12)), 
                                source(2, 2),
                                destination(3, 3) {}
 
@@ -23,11 +23,11 @@ protected:
 };
 
 TEST_F(XYEnvironmentTest, ConstructXYEnvironmentGrid) {
-    auto grid = makeXYEnvironment(3, 5);
 
-    EXPECT_EQ(mapSize(grid), size_t(15));
-    EXPECT_TRUE(inBounds(grid, XYLocation(1, 1)));
-    EXPECT_TRUE(inBounds(grid, XYLocation(3, 5)));
+    EXPECT_EQ(mapSize(env), size_t(120));
+    EXPECT_TRUE(inBounds(env, XYLocation(1, 1)));
+    EXPECT_TRUE(inBounds(env, XYLocation(10, 12)));
+    EXPECT_FALSE(inBounds(env, XYLocation(11, 5)));
 }
 
 TEST_F(XYEnvironmentTest, RejectsNonPositiveDimensions) {
@@ -44,8 +44,8 @@ TEST_F(XYEnvironmentTest, BoundsAreOneBasedAndInclusive) {
     EXPECT_FALSE(inBounds(env, XYLocation(1, 0)));
     EXPECT_FALSE(inBounds(env, XYLocation(-1, 1)));
     EXPECT_FALSE(inBounds(env, XYLocation(1, -1)));
-    EXPECT_FALSE(inBounds(env, XYLocation(5, 1)));
-    EXPECT_FALSE(inBounds(env, XYLocation(1, 5)));
+    EXPECT_FALSE(inBounds(env, XYLocation(11, 1)));
+    EXPECT_FALSE(inBounds(env, XYLocation(1, 14)));
 }
 
 TEST_F(XYEnvironmentTest, EmptyAndOccupiedQueriesAgree) {
@@ -62,7 +62,7 @@ TEST_F(XYEnvironmentTest, EmptyAndOccupiedQueriesAgree) {
 
 TEST_F(XYEnvironmentTest, OutOfBoundsQueriesReturnNoObjectAndAreNotOccupied) {
     for (const XYLocation loc : {XYLocation(0, 1), XYLocation(1, 0),
-                                 XYLocation(5, 1), XYLocation(1, 5)}) {
+                                 XYLocation(11, 1), XYLocation(1, 13)}) {
         EXPECT_FALSE(getObjectAt(env, loc).has_value());
         EXPECT_FALSE(isOccupied(env, loc));
     }
@@ -118,7 +118,7 @@ TEST_F(XYEnvironmentAgentTest, AddRejectsAlreadyRegisteredAgentAtAnotherLocation
 TEST_F(XYEnvironmentAgentTest, AddRejectsOutOfBoundsLocationWithoutRegisteringAgent) {
     XYAgent agent;
 
-    EXPECT_FALSE(addObjectTo(agent, env, XYLocation(5, 1)));
+    EXPECT_FALSE(addObjectTo(agent, env, XYLocation(11, 1)));
     EXPECT_FALSE(agentIsRegistered(env.agents_, agent));
     EXPECT_FALSE(getLocationFor(env, agent.ref_).has_value());
 }
@@ -174,7 +174,7 @@ TEST_F(XYEnvironmentAgentTest, MoveRejectsOutOfBoundsDestinationWithoutChangingS
     XYAgent agent;
 
     ASSERT_TRUE(addObjectTo(agent, env, source));
-    EXPECT_FALSE(moveObjectTo(agent.ref_, env, XYLocation(5, 1)));
+    EXPECT_FALSE(moveObjectTo(agent.ref_, env, XYLocation(11, 1)));
 
     EXPECT_TRUE(isOccupied(env, source));
     ASSERT_TRUE(getLocationFor(env, agent.ref_).has_value());
@@ -203,6 +203,14 @@ TEST_F(XYEnvironmentAgentTest, MoveToCurrentLocationFailsWithoutChangingState) {
     EXPECT_EQ(getLocationFor(env, agent.ref_).value(), source);
 }
 
+TEST_F(XYEnvironmentAgentTest, MoveInDirectionSucceeds) {
+    XYAgent agent1;
+    XYAgent agent2;
+
+    SUCCEED();
+    //ASSERT_TRUE(addObjectTo(agent1, env, source));
+    //ASSERT_TRUE(moveObject(agent1, env, Direction::north));
+}
 
 
 

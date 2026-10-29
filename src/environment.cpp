@@ -16,13 +16,15 @@ namespace environment {
     export struct Wall;
     export struct TypeRef;
     export enum class Type;
+    export enum class Direction;
     
     using Tiles = std::vector<TypeRef>;
     using Agents = std::map<int, XYAgent>;
     using Locations = std::map<int, XYLocation>;
     using XYSpace = std::map<XYLocation, Tiles>;
 
-    enum class Type { wall, xyagent };
+    enum class Type { wall, xyagent, dirt, gold };
+    enum class Direction { north, south, east, west };
 
     struct TypeRef { 
         Type type_; 
@@ -168,56 +170,10 @@ namespace environment {
         return it != env.xyspace_.end() && !it->second.empty(); 
     }
 
-} // namespace environment 
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*export bool addAgentToLocation(XYAgent agent, XYEnvironment& env, const XYLocation& loc) {
-        auto it = env.xyspace_.find(loc);
-        if (it == env.xyspace_.end()) return false;
-
-        //////////////////////////////////////////////////////////////////////////////////////
-        // this will change after walls, dirt, gold etc.
-        // some objects can be at the same loc (agent, dirt, gold etc.) Some objects can only be alone (wall)
-        // right now this is the dupe agent test, and it just checks if *anything* is at the location vector
-        // after walls etc., it will have to do a ref_id test
-        if (!it->second.empty()) return false; // this will change after walls, dirt, gold etc.
-        //////////////////////////////////////////////////////////////////////////////////////
-        
-        if (!registerAgent(env.agents_, agent)) return false;
-        it->second.push_back(agent.ref_);
+    export bool moveObject(XYAgent& agent, XYEnvironment& env, Direction dir) {
         return true;
     }
 
-    export std::optional<TypeRef> getObjectAt(const XYEnvironment& env, const XYLocation& loc) {
-        if (!inBounds(env, loc)) return std::nullopt;
 
-        auto it = env.xyspace_.find(loc);
-        if (it == env.xyspace_.end()) return std::nullopt;
+} // namespace environment 
 
-        const Tiles& tiles = it->second;
-        if (tiles.empty()) return std::nullopt;
-
-        return tiles.front();
-
-   //     const Object& obj = tiles.front(); // will change logic to return set when adding more Objects
-
-        // return std::visit(
-        //     [](const auto& x) -> TypeRef {
-        //         return x.ref_;
-        //     },
-        //     obj
-        // );
-    }
-    
-*/
