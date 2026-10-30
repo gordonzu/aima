@@ -38,6 +38,10 @@ namespace environment {
     export std::optional<XYLocation> getLocationFor(const TypeRef& t, const XYEnvironment& env); 
     export bool objectIsRegistered(Objects& objects, const TypeRef& t); 
     export std::optional<TypeRef> getObjectAt(const XYEnvironment& env, const XYLocation& loc);
+    export std::optional<TypeRef> addAgent(XYEnvironment& env, const XYLocation& loc);
+    export std::optional<TypeRef> addWall(XYEnvironment& env, const XYLocation& loc);
+    export std::optional<TypeRef> addDirt(XYEnvironment& env, const XYLocation& loc);
+    export std::optional<TypeRef> addGold(XYEnvironment& env, const XYLocation& loc);
 
     struct TypeRef { 
         Type type_; 
@@ -90,6 +94,8 @@ namespace environment {
         Locations locations;
         XYSpace xyspace;
     };
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     export std::ostream& operator<<(std::ostream& os, const TypeRef& t) {
         const char* name = (t.type_ == Type::xyagent) ? "xyagent" : "wall";
@@ -234,14 +240,35 @@ namespace environment {
             if (isBlocked(env, loc)) return false;          
         }
 
-        if (!registerObject(env.objects, ref)) {
-          std::cout << "registerObject()" << "\n";
-            return false;
-        }
+        if (!registerObject(env.objects, ref)) return false;
 
         it->second.push_back(ref);
         env.locations[ref.id] = loc;
         return true;
+    }
+
+    std::optional<TypeRef> addAgent(XYEnvironment& env, const XYLocation& loc) {
+        XYAgent agent;
+        if (!addObjectTo(agent.ref, env, loc)) return std::nullopt;
+        return agent.ref;
+    }
+
+    std::optional<TypeRef> addWall(XYEnvironment& env, const XYLocation& loc) {
+        Wall wall;
+        if (!addObjectTo(wall.ref, env, loc)) return std::nullopt;
+        return wall.ref;
+    }
+
+    std::optional<TypeRef> addDirt(XYEnvironment& env, const XYLocation& loc) {
+        Dirt dirt;
+        if (!addObjectTo(dirt.ref, env, loc)) return std::nullopt;
+        return dirt.ref;
+    }
+
+    std::optional<TypeRef> addGold(XYEnvironment& env, const XYLocation& loc) {
+        Gold gold;
+        if (!addObjectTo(gold.ref, env, loc)) return std::nullopt;
+        return gold.ref;
     }
 
 

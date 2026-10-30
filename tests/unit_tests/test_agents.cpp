@@ -148,7 +148,6 @@ TEST_F(XYEnvironmentAgentTest, MoveToEmptyLocationVacatesSource) {
     EXPECT_EQ(object->id, agent.ref.id);
 } 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
 TEST_F(XYEnvironmentAgentTest, MoveRejectsOccupiedDestinationWithoutChangingState) {
     XYAgent moving;
     XYAgent stationary;
@@ -171,7 +170,6 @@ TEST_F(XYEnvironmentAgentTest, MoveRejectsOccupiedDestinationWithoutChangingStat
     EXPECT_EQ(sourceObject->id, moving.ref.id);
     EXPECT_EQ(destinationObject->id, stationary.ref.id);
 }
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 TEST_F(XYEnvironmentAgentTest, MoveRejectsOutOfBoundsDestinationWithoutChangingState) {
     XYAgent agent;
@@ -208,28 +206,31 @@ TEST_F(XYEnvironmentAgentTest, MoveToCurrentLocationFailsWithoutChangingState) {
 
 TEST_F(XYEnvironmentAgentTest, MoveInDirectionToEmptyLocationSucceeds) {
     XYAgent agent;
-    XYLocation nloc(2, 3), sloc(2, 2), eloc(3, 2), wloc(2, 2);
+    TypeRef t = agent.ref;
 
-    ASSERT_TRUE(addObjectTo(agent.ref, env, source));
+    ASSERT_TRUE(addObjectTo(t, env, XYLocation(3, 5)));
+    ASSERT_TRUE(moveObjectTo(t, env, XYLocation(4, 6)));
 
-    ASSERT_TRUE(moveObject(agent.ref, env, Direction::north));
-    ASSERT_TRUE(isOccupied(env, nloc));
-    EXPECT_FALSE(isOccupied(env, source));
+    ASSERT_TRUE(moveObject(t, env, Direction::north));   
+    EXPECT_EQ(XYLocation(4, 7), getLocationFor(t, env));
+    ASSERT_TRUE(moveObject(t, env, Direction::north));   
+    EXPECT_EQ(XYLocation(4, 8), getLocationFor(t, env));
 
-    ASSERT_TRUE(moveObject(agent.ref, env, Direction::south));
-    ASSERT_TRUE(isOccupied(env, sloc));
-    EXPECT_TRUE(isOccupied(env, source));
+    ASSERT_TRUE(moveObject(t, env, Direction::west));   
+    EXPECT_EQ(XYLocation(3, 8), getLocationFor(t, env));
+    ASSERT_TRUE(moveObject(t, env, Direction::west));   
+    EXPECT_EQ(XYLocation(2, 8), getLocationFor(t, env));
 
-    ASSERT_TRUE(moveObject(agent.ref, env, Direction::east));
-    ASSERT_TRUE(isOccupied(env, eloc));
-    EXPECT_FALSE(isOccupied(env, source));
+    ASSERT_TRUE(moveObject(t, env, Direction::south));   
+    EXPECT_EQ(XYLocation(2, 7), getLocationFor(t, env));
+    ASSERT_TRUE(moveObject(t, env, Direction::south));   
+    EXPECT_EQ(XYLocation(2, 6), getLocationFor(t, env));
 
-    ASSERT_TRUE(moveObject(agent.ref, env, Direction::west));
-    ASSERT_TRUE(isOccupied(env, wloc));
-    EXPECT_TRUE(isOccupied(env, source));
+    ASSERT_TRUE(moveObject(t, env, Direction::east));   
+    EXPECT_EQ(XYLocation(3, 6), getLocationFor(t, env));
+    ASSERT_TRUE(moveObject(t, env, Direction::east));   
+    EXPECT_EQ(XYLocation(4, 6), getLocationFor(t, env));
 }
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////
 
 TEST_F(XYEnvironmentAgentTest, MoveInDirectionFailsWhenDestinationContainsAgentOrWall) {
     XYAgent agent1;
@@ -244,7 +245,6 @@ TEST_F(XYEnvironmentAgentTest, MoveInDirectionFailsWhenDestinationContainsAgentO
     EXPECT_FALSE(moveObject(agent1.ref, env, Direction::north));
     EXPECT_EQ(source, *(getLocationFor(agent1.ref, env)));       
 }
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 TEST_F(XYEnvironmentAgentTest, AddsFailWhenDestinationIsBlocked) {
     XYAgent agent;
@@ -288,7 +288,6 @@ TEST_F(XYEnvironmentAgentTest, MovesFailWhenDestinationIsBlocked) {
     ASSERT_TRUE(addObjectTo(gold.ref, env, loc4));
 
     EXPECT_FALSE(moveObject(agent2.ref, env, Direction::north));
-
 }
 
 
