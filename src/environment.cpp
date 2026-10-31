@@ -21,29 +21,30 @@ namespace environment {
     export enum class Direction;
 
     using Tiles = std::vector<TypeRef>;
+    using ObjRef = std::optional<TypeRef>;
     using Objects = std::map<int, TypeRef>;
     using Locations = std::map<int, XYLocation>;
     using XYSpace = std::map<XYLocation, Tiles>;
-
-    enum class Type { wall, xyagent, dirt, gold };
-    enum class Direction { north, south, east, west };
 
     export bool registerObject(Objects& objects, const TypeRef& ref);
     export XYEnvironment makeXYEnvironment(int w, int h);
     export size_t mapSize(const XYEnvironment& env); 
     export bool isOccupied(const XYEnvironment& env, const XYLocation& loc); 
-    export bool moveObjectTo(const TypeRef& ref, XYEnvironment& env, const XYLocation& newLocation); 
-    export bool moveObject(TypeRef& ref, XYEnvironment& env, Direction dir); 
+    export bool moveObjectTo(const ObjRef& ref, XYEnvironment& env, const XYLocation& newLocation); 
+    export bool moveObject(const ObjRef& ref, XYEnvironment& env, Direction dir); 
     export bool addObjectTo(const TypeRef& ref, XYEnvironment& env, const XYLocation& loc); 
-    export std::optional<XYLocation> getLocationFor(const std::optional<TypeRef>& t, const XYEnvironment& env); 
-    export bool objectIsRegistered(const std::optional<TypeRef>& t, Objects& objects); 
-    export std::optional<TypeRef> getObjectAt(const XYEnvironment& env, const XYLocation& loc);
-    export std::optional<TypeRef> addAgent(XYEnvironment& env, const XYLocation& loc);
-    export std::optional<TypeRef> addWall(XYEnvironment& env, const XYLocation& loc);
-    export std::optional<TypeRef> addDirt(XYEnvironment& env, const XYLocation& loc);
-    export std::optional<TypeRef> addGold(XYEnvironment& env, const XYLocation& loc);
+    export std::optional<XYLocation> getLocationFor(const ObjRef& t, const XYEnvironment& env); 
+    export bool objectIsRegistered(const ObjRef& t, Objects& objects); 
+    export ObjRef getObjectAt(const XYEnvironment& env, const XYLocation& loc);
+    export ObjRef addAgent(XYEnvironment& env, const XYLocation& loc);
+    export ObjRef addWall(XYEnvironment& env, const XYLocation& loc);
+    export ObjRef addDirt(XYEnvironment& env, const XYLocation& loc);
+    export ObjRef addGold(XYEnvironment& env, const XYLocation& loc);
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    enum class Type { wall, xyagent, dirt, gold };
+    enum class Direction { north, south, east, west };
 
     struct TypeRef { 
         Type type_; 
@@ -113,7 +114,7 @@ namespace environment {
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    export std::ostream& operator<<(std::ostream& os, const std::optional<TypeRef>& t) {
+    export std::ostream& operator<<(std::ostream& os, const ObjRef& t) {
         if (!t) return os << "[none]";
         return os << *t;
     }
@@ -134,14 +135,14 @@ namespace environment {
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    bool objectIsRegistered(const std::optional<TypeRef>& t, Objects& objects) {
+    bool objectIsRegistered(const ObjRef& t, Objects& objects) {
         if (!t) return false;
         return objects.contains(t->id);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    std::optional<XYLocation> getLocationFor(const std::optional<TypeRef>& t, const XYEnvironment& env) {
+    std::optional<XYLocation> getLocationFor(const ObjRef& t, const XYEnvironment& env) {
         if (!t) return std::nullopt;
         auto it = env.locations.find(t->id);
         if (it == env.locations.end()) return std::nullopt;
@@ -150,7 +151,7 @@ namespace environment {
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
      
-    std::optional<TypeRef> getObjectAt(const XYEnvironment& env, const XYLocation& loc) {
+    ObjRef getObjectAt(const XYEnvironment& env, const XYLocation& loc) {
         if (!inBounds(env, loc)) return std::nullopt;
 
         auto it = env.xyspace.find(loc);
@@ -207,8 +208,8 @@ namespace environment {
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    bool moveObjectTo(const TypeRef& ref, XYEnvironment& env, const XYLocation& newLocation) {
-        auto refIdItr = env.locations.find(ref.id);
+    bool moveObjectTo(const ObjRef& ref, XYEnvironment& env, const XYLocation& newLocation) {
+        auto refIdItr = env.locations.find(ref->id);
         if (refIdItr == env.locations.end()) return false;
 
         auto newLocItr = env.xyspace.find(newLocation);
@@ -225,17 +226,19 @@ namespace environment {
         if (oldLocItr == env.xyspace.end()) return false;
         
         Tiles& tiles = oldLocItr->second;
-        std::erase_if(tiles, [&](const TypeRef& r) { return r.id == ref.id; }); // how will I guard against agent dupes
+        std::erase_if(tiles, [&](const TypeRef& r) { return r.id == ref->id; }); // how will I guard against agent dupes
 
-        newLocItr->second.push_back(ref);
+        newLocItr->second.push_back(*ref);
         refIdItr->second = newLocation;
         return true;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    bool moveObject(TypeRef& ref, XYEnvironment& env, Direction dir) {
-        XYLocation newLoc(0, 0), oldLoc = *(getLocationFor(ref, env));
+    bool moveObject(const ObjRef& ref, XYEnvironment& env, Direction dir) {
+        XYLocation newLoc(0, 0); 
+        XYLocation oldLoc = *(getLocationFor(ref, env));
+
         try {
             switch (dir) {
                 case Direction::north:
@@ -274,10 +277,16 @@ namespace environment {
         if (it == env.xyspace.end()) return false;
 
         if (isOccupied(env, loc)) { 
-            if (isBlocked(env, loc)) return false;          
+            if (isBlocked(env, loc)) {
+                //std::cout << "BLOCKED" << "\n";
+                return false;          
+            }
         }
 
-        if (!registerObject(env.objects, ref)) return false;
+        if (!registerObject(env.objects, ref)) {
+            //std::cout << "UNREGISTERED" << "\n";
+            return false;
+        }
 
         it->second.push_back(ref);
         env.locations[ref.id] = loc;
@@ -286,7 +295,7 @@ namespace environment {
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    std::optional<TypeRef> addAgent(XYEnvironment& env, const XYLocation& loc) {
+    ObjRef addAgent(XYEnvironment& env, const XYLocation& loc) {
         XYAgent agent;
         if (!addObjectTo(agent.ref, env, loc)) return std::nullopt;
         return agent.ref;
@@ -294,7 +303,7 @@ namespace environment {
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    std::optional<TypeRef> addWall(XYEnvironment& env, const XYLocation& loc) {
+    ObjRef addWall(XYEnvironment& env, const XYLocation& loc) {
         Wall wall;
         if (!addObjectTo(wall.ref, env, loc)) return std::nullopt;
         return wall.ref;
@@ -302,7 +311,7 @@ namespace environment {
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    std::optional<TypeRef> addDirt(XYEnvironment& env, const XYLocation& loc) {
+    ObjRef addDirt(XYEnvironment& env, const XYLocation& loc) {
         Dirt dirt;
         if (!addObjectTo(dirt.ref, env, loc)) return std::nullopt;
         return dirt.ref;
@@ -310,7 +319,7 @@ namespace environment {
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    std::optional<TypeRef> addGold(XYEnvironment& env, const XYLocation& loc) {
+    ObjRef addGold(XYEnvironment& env, const XYLocation& loc) {
         Gold gold;
         if (!addObjectTo(gold.ref, env, loc)) return std::nullopt;
         return gold.ref;
