@@ -35,13 +35,15 @@ namespace environment {
     export bool moveObjectTo(const TypeRef& ref, XYEnvironment& env, const XYLocation& newLocation); 
     export bool moveObject(TypeRef& ref, XYEnvironment& env, Direction dir); 
     export bool addObjectTo(const TypeRef& ref, XYEnvironment& env, const XYLocation& loc); 
-    export std::optional<XYLocation> getLocationFor(const TypeRef& t, const XYEnvironment& env); 
-    export bool objectIsRegistered(Objects& objects, const TypeRef& t); 
+    export std::optional<XYLocation> getLocationFor(const std::optional<TypeRef>& t, const XYEnvironment& env); 
+    export bool objectIsRegistered(const std::optional<TypeRef>& t, Objects& objects); 
     export std::optional<TypeRef> getObjectAt(const XYEnvironment& env, const XYLocation& loc);
     export std::optional<TypeRef> addAgent(XYEnvironment& env, const XYLocation& loc);
     export std::optional<TypeRef> addWall(XYEnvironment& env, const XYLocation& loc);
     export std::optional<TypeRef> addDirt(XYEnvironment& env, const XYLocation& loc);
     export std::optional<TypeRef> addGold(XYEnvironment& env, const XYLocation& loc);
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     struct TypeRef { 
         Type type_; 
@@ -86,10 +88,17 @@ namespace environment {
         bool operator==(const XYLocation&) const = default;
     };
 
-    // should XYEnvironment have a deleted default ctor
     struct XYEnvironment {
+    private:
+        struct FactoryTag {};
+        explicit XYEnvironment(FactoryTag) {};
+        friend XYEnvironment makeXYEnvironment(int w, int h);
+
+    public:
+        XYEnvironment() = delete;
         unsigned w_  = 0;
         unsigned h_ = 0;
+        
         Objects objects;
         Locations locations;
         XYSpace xyspace;
@@ -102,10 +111,14 @@ namespace environment {
         return os << "[" << name << ", " << t.id << "]";
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
     export std::ostream& operator<<(std::ostream& os, const std::optional<TypeRef>& t) {
         if (!t) return os << "[none]";
         return os << *t;
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     export bool inBounds(const XYEnvironment& env, const XYLocation& loc) {
         return loc.x >= 1 && loc.y >= 1 &&
@@ -113,19 +126,29 @@ namespace environment {
                loc.y <= static_cast<int>(env.h_);
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
     bool registerObject(Objects& objects, const TypeRef& ref)  {
         return objects.emplace(ref.id, ref).second;
     }
 
-    bool objectIsRegistered(Objects& objects, const TypeRef& t) {
-        return objects.contains(t.id);
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    bool objectIsRegistered(const std::optional<TypeRef>& t, Objects& objects) {
+        if (!t) return false;
+        return objects.contains(t->id);
     }
 
-    std::optional<XYLocation> getLocationFor(const TypeRef& t, const XYEnvironment& env) {
-        auto it = env.locations.find(t.id);
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    std::optional<XYLocation> getLocationFor(const std::optional<TypeRef>& t, const XYEnvironment& env) {
+        if (!t) return std::nullopt;
+        auto it = env.locations.find(t->id);
         if (it == env.locations.end()) return std::nullopt;
         return it->second;
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
      
     std::optional<TypeRef> getObjectAt(const XYEnvironment& env, const XYLocation& loc) {
         if (!inBounds(env, loc)) return std::nullopt;
@@ -139,10 +162,12 @@ namespace environment {
         return tiles.front();
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
     XYEnvironment makeXYEnvironment(int w, int h) {
         if (w <= 0 || h <= 0) throw std::invalid_argument("params must be > 0");
 
-        XYEnvironment env;
+        XYEnvironment env{XYEnvironment::FactoryTag{}};
         env.w_ = static_cast<unsigned>(w);
         env.h_ = static_cast<unsigned>(h);
 
@@ -155,9 +180,13 @@ namespace environment {
         return env;
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
     size_t mapSize(const XYEnvironment& env) {
         return env.xyspace.size();
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     bool isBlocked(const XYEnvironment& env, const XYLocation& loc) {
         auto it = env.xyspace.find(loc);
@@ -169,10 +198,14 @@ namespace environment {
         return false;
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
     bool isOccupied(const XYEnvironment& env, const XYLocation& loc) {
         auto it = env.xyspace.find(loc);
         return it != env.xyspace.end() && !it->second.empty(); 
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     bool moveObjectTo(const TypeRef& ref, XYEnvironment& env, const XYLocation& newLocation) {
         auto refIdItr = env.locations.find(ref.id);
@@ -198,6 +231,8 @@ namespace environment {
         refIdItr->second = newLocation;
         return true;
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     bool moveObject(TypeRef& ref, XYEnvironment& env, Direction dir) {
         XYLocation newLoc(0, 0), oldLoc = *(getLocationFor(ref, env));
@@ -232,6 +267,8 @@ namespace environment {
         return false;
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
     bool addObjectTo(const TypeRef& ref, XYEnvironment& env, const XYLocation& loc) {
         auto it = env.xyspace.find(loc);
         if (it == env.xyspace.end()) return false;
@@ -247,11 +284,15 @@ namespace environment {
         return true;
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
     std::optional<TypeRef> addAgent(XYEnvironment& env, const XYLocation& loc) {
         XYAgent agent;
         if (!addObjectTo(agent.ref, env, loc)) return std::nullopt;
         return agent.ref;
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     std::optional<TypeRef> addWall(XYEnvironment& env, const XYLocation& loc) {
         Wall wall;
@@ -259,17 +300,23 @@ namespace environment {
         return wall.ref;
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
     std::optional<TypeRef> addDirt(XYEnvironment& env, const XYLocation& loc) {
         Dirt dirt;
         if (!addObjectTo(dirt.ref, env, loc)) return std::nullopt;
         return dirt.ref;
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
     std::optional<TypeRef> addGold(XYEnvironment& env, const XYLocation& loc) {
         Gold gold;
         if (!addObjectTo(gold.ref, env, loc)) return std::nullopt;
         return gold.ref;
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
 
 
 } // namespace environment 
