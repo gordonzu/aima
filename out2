@@ -1,0 +1,29 @@
+-- Configuring done (0.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/gordonyx/.local/src/c++/aima/build
+ninja: Entering directory `/home/gordonyx/.local/src/c++/aima/build'
+[1/19] Generating CXX dyndep file _deps/googletest-build/googlemock/CMakeFiles/gmock_main.dir/CXX.dd
+[2/17] Generating CXX dyndep file _deps/googletest-build/googletest/CMakeFiles/gtest.dir/CXX.dd
+[3/15] Generating CXX dyndep file _deps/googletest-build/googlemock/CMakeFiles/gmock.dir/CXX.dd
+[4/13] Generating CXX dyndep file _deps/googletest-build/googletest/CMakeFiles/gtest_main.dir/CXX.dd
+[5/11] Generating CXX dyndep file src/CMakeFiles/aima_lib.dir/CXX.dd
+[6/11] Generating CXX dyndep file tests/unit_tests/CMakeFiles/aima_unit_tests.dir/CXX.dd
+[7/11] Building CXX object src/CMakeFiles/aima_lib.dir/agent.cpp.o
+[8/11] Building CXX object src/CMakeFiles/aima_lib.dir/environment.cpp.o
+[9/11] Linking CXX static library src/libaima_lib.a
+[10/11] Building CXX object tests/unit_tests/CMakeFiles/aima_unit_tests.dir/test_agents.cpp.o
+[11/11] Linking CXX executable tests/unit_tests/aima_unit_tests
+FAILED: [code=1] tests/unit_tests/aima_unit_tests tests/unit_tests/aima_unit_tests[1]_tests.cmake /home/gordonyx/.local/src/c++/aima/build/tests/unit_tests/aima_unit_tests[1]_tests.cmake 
+: && /home/gordonyx/.local/bin/llvm/bin/clang++ -g -Xlinker --dependency-file=tests/unit_tests/CMakeFiles/aima_unit_tests.dir/link.d tests/unit_tests/CMakeFiles/aima_unit_tests.dir/test_agents.cpp.o -o tests/unit_tests/aima_unit_tests  src/libaima_lib.a  lib/libgtest.a  lib/libgtest_main.a  lib/libgtest.a && cd /home/gordonyx/.local/src/c++/aima/build/tests/unit_tests && /usr/bin/cmake -D TEST_TARGET=aima_unit_tests -D TEST_EXECUTABLE=/home/gordonyx/.local/src/c++/aima/build/tests/unit_tests/aima_unit_tests -D TEST_EXECUTOR= -D TEST_WORKING_DIR=/home/gordonyx/.local/src/c++/aima/build/tests/unit_tests -D TEST_EXTRA_ARGS= -D TEST_PROPERTIES= -D TEST_PREFIX= -D TEST_SUFFIX= -D TEST_FILTER= -D NO_PRETTY_TYPES=FALSE -D NO_PRETTY_VALUES=FALSE -D TEST_LIST=aima_unit_tests_TESTS -D CTEST_FILE=/home/gordonyx/.local/src/c++/aima/build/tests/unit_tests/aima_unit_tests[1]_tests.cmake -D TEST_DISCOVERY_TIMEOUT=5 -D TEST_DISCOVERY_EXTRA_ARGS= -D TEST_XML_OUTPUT_DIR= -P /usr/share/cmake/Modules/GoogleTestAddTests.cmake
+/usr/bin/ld: tests/unit_tests/CMakeFiles/aima_unit_tests.dir/test_agents.cpp.o: in function `XYEnvironmentAgentTest_AddRegistersAgentAndRecordsLocation_Test::TestBody()':
+/home/gordonyx/.local/src/c++/aima/tests/unit_tests/test_agents.cpp:99:(.text+0x3247): undefined reference to `environment::objectIsRegistered@aima.environment(std::optional<environment::TypeRef@aima.environment> const&, std::map<int, environment::TypeRef@aima.environment, std::less<int>, std::allocator<std::pair<int const, environment::TypeRef@aima.environment> > > const&)'
+/usr/bin/ld: tests/unit_tests/CMakeFiles/aima_unit_tests.dir/test_agents.cpp.o: in function `XYEnvironmentAgentTest_AddRejectsOccupiedLocationWithoutChangingState_Test::TestBody()':
+/home/gordonyx/.local/src/c++/aima/tests/unit_tests/test_agents.cpp:121:(.text+0x45f8): undefined reference to `environment::objectIsRegistered@aima.environment(std::optional<environment::TypeRef@aima.environment> const&, std::map<int, environment::TypeRef@aima.environment, std::less<int>, std::allocator<std::pair<int const, environment::TypeRef@aima.environment> > > const&)'
+/usr/bin/ld: /home/gordonyx/.local/src/c++/aima/tests/unit_tests/test_agents.cpp:122:(.text+0x479d): undefined reference to `environment::objectIsRegistered@aima.environment(std::optional<environment::TypeRef@aima.environment> const&, std::map<int, environment::TypeRef@aima.environment, std::less<int>, std::allocator<std::pair<int const, environment::TypeRef@aima.environment> > > const&)'
+/usr/bin/ld: tests/unit_tests/CMakeFiles/aima_unit_tests.dir/test_agents.cpp.o: in function `XYEnvironmentAgentTest_AddRejectsOutOfBoundsLocationWithoutRegisteringAgent_Test::TestBody()':
+/home/gordonyx/.local/src/c++/aima/tests/unit_tests/test_agents.cpp:138:(.text+0x5716): undefined reference to `environment::objectIsRegistered@aima.environment(std::optional<environment::TypeRef@aima.environment> const&, std::map<int, environment::TypeRef@aima.environment, std::less<int>, std::allocator<std::pair<int const, environment::TypeRef@aima.environment> > > const&)'
+/usr/bin/ld: tests/unit_tests/CMakeFiles/aima_unit_tests.dir/test_agents.cpp.o: in function `XYEnvironmentAgentTest_AddAcceptsBoundaryLocations_Test::TestBody()':
+/home/gordonyx/.local/src/c++/aima/tests/unit_tests/test_agents.cpp:152:(.text+0x6128): undefined reference to `environment::objectIsRegistered@aima.environment(std::optional<environment::TypeRef@aima.environment> const&, std::map<int, environment::TypeRef@aima.environment, std::less<int>, std::allocator<std::pair<int const, environment::TypeRef@aima.environment> > > const&)'
+/usr/bin/ld: tests/unit_tests/CMakeFiles/aima_unit_tests.dir/test_agents.cpp.o:/home/gordonyx/.local/src/c++/aima/tests/unit_tests/test_agents.cpp:153: more undefined references to `environment::objectIsRegistered@aima.environment(std::optional<environment::TypeRef@aima.environment> const&, std::map<int, environment::TypeRef@aima.environment, std::less<int>, std::allocator<std::pair<int const, environment::TypeRef@aima.environment> > > const&)' follow
+clang++: error: linker command failed with exit code 1 (use -v to see invocation)
+ninja: build stopped: subcommand failed.

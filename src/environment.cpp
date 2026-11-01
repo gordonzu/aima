@@ -34,7 +34,7 @@ namespace environment {
     export bool moveObject(const ObjRef& ref, XYEnvironment& env, Direction dir); 
     export bool addObjectTo(const TypeRef& ref, XYEnvironment& env, const XYLocation& loc); 
     export std::optional<XYLocation> getLocationFor(const ObjRef& t, const XYEnvironment& env); 
-    export bool objectIsRegistered(const ObjRef& t, Objects& objects); 
+    export bool objectIsRegistered(const ObjRef& t, const Objects& objects); 
     export ObjRef getObjectAt(const XYEnvironment& env, const XYLocation& loc);
     export ObjRef addAgent(XYEnvironment& env, const XYLocation& loc);
     export ObjRef addWall(XYEnvironment& env, const XYLocation& loc);
@@ -135,7 +135,7 @@ namespace environment {
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    bool objectIsRegistered(const ObjRef& t, Objects& objects) {
+    bool objectIsRegistered(const ObjRef& t, const Objects& objects) {
         if (!t) return false;
         return objects.contains(t->id);
     }

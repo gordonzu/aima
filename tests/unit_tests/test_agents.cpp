@@ -1,5 +1,6 @@
 #include <gtest/gtest.h> 
 #include <sys/ucontext.h>
+#include <optional>
 
 import aima.environment;
 import aima.agent;
@@ -21,6 +22,24 @@ protected:
     XYLocation source;
     XYLocation destination;
 };
+
+template <typename Objects>
+testing::AssertionResult isValidObject(const std::optional<TypeRef>& ref,
+                                       const Objects& objects,
+                                       Type expected) {
+    if (!ref)
+        return testing::AssertionFailure() << "object was not created (nullopt)";
+
+    if (!objectIsRegistered(ref, objects))
+        return testing::AssertionFailure() << "object id " << ref->id << " is not registered";
+
+    if (ref->type_ != expected)
+        return testing::AssertionFailure()
+               << "type mismatch: expected " << static_cast<int>(expected)
+               << ", got " << static_cast<int>(ref->type_);
+
+    return testing::AssertionSuccess();
+}
 
 TEST_F(XYEnvironmentTest, ConstructXYEnvironmentGrid) {
 
@@ -55,10 +74,7 @@ TEST_F(XYEnvironmentTest, EmptyAndOccupiedQueriesAgree) {
     ASSERT_FALSE(isOccupied(env, loc));
 
     const auto agent = addAgent(env, loc);
-
-    ASSERT_TRUE(agent.has_value());
-    ASSERT_EQ(agent->type_, Type::xyagent);
-
+    ASSERT_TRUE(isValidObject(agent, env.objects, Type::xyagent));
     ASSERT_TRUE(getObjectAt(env, loc).has_value());
     ASSERT_TRUE(isOccupied(env, loc));
 }
@@ -71,48 +87,63 @@ TEST_F(XYEnvironmentTest, OutOfBoundsQueriesReturnNoObjectAndAreNotOccupied) {
     }
 }
 
-TEST_F(XYEnvironmentAgentTest, AddRegistersAgentAndRecordsLocation) {
+TEST_F(XYEnvironmentAgentTest, AddRegistersObjectAndRecordsLocation) {
     const auto agent = addAgent(env, source);
-    ASSERT_TRUE(agent.has_value());
-    ASSERT_EQ(agent->type_, Type::xyagent);
+    const auto wall = addWall(env, XYLocation(1, 1));
+    const auto dirt = addDirt(env, XYLocation(5, 5));
+    const auto gold = addGold(env, XYLocation(6, 6));
 
-    ASSERT_TRUE(objectIsRegistered(agent, env.objects));
-    ASSERT_TRUE(getLocationFor(agent, env).has_value());
-    ASSERT_EQ(getLocationFor(agent, env).value(), source);
+    ASSERT_TRUE(isValidObject(agent, env.objects, Type::xyagent));
+    ASSERT_TRUE(isValidObject(wall, env.objects, Type::wall));
+    ASSERT_TRUE(isValidObject(dirt, env.objects, Type::dirt));
+    ASSERT_TRUE(isValidObject(gold, env.objects, Type::gold));
+
     ASSERT_TRUE(isOccupied(env, source));
+    ASSERT_TRUE(isOccupied(env, XYLocation(1, 1)));
+    ASSERT_TRUE(isOccupied(env, XYLocation(5, 5)));
+    ASSERT_TRUE(isOccupied(env, XYLocation(6, 6)));
 
-    const auto object = getObjectAt(env, source);
-    ASSERT_TRUE(object.has_value());
-    ASSERT_EQ(object->type_, Type::xyagent);
-    ASSERT_EQ(object->id, agent->id);
+    ASSERT_TRUE(getLocationFor(agent, env).has_value());
+    ASSERT_TRUE(getLocationFor(wall, env).has_value());
+    ASSERT_TRUE(getLocationFor(dirt, env).has_value());
+    ASSERT_TRUE(getLocationFor(gold, env).has_value());
+
+    ASSERT_EQ(getLocationFor(agent, env).value(), source);
+    ASSERT_EQ(getLocationFor(wall, env).value(), XYLocation(1, 1));
+    ASSERT_EQ(getLocationFor(dirt, env).value(), XYLocation(5, 5));
+    ASSERT_EQ(getLocationFor(gold, env).value(), XYLocation(6, 6));
+
+    const auto object1 = getObjectAt(env, source);
+    ASSERT_EQ(object1->id, agent->id);
+    const auto object2 = getObjectAt(env, XYLocation(1, 1));
+    ASSERT_EQ(object2->id, wall->id);
+    const auto object3 = getObjectAt(env, XYLocation(5, 5));
+    ASSERT_EQ(object3->id, dirt->id);
+    const auto object4 = getObjectAt(env, XYLocation(6, 6));
+    ASSERT_EQ(object4->id, gold->id);
 }
 
 // I want to return meaningful error messages, not just true/false
 
 TEST_F(XYEnvironmentAgentTest, AddRejectsOccupiedLocationWithoutChangingState) {
     const auto agent1 = addAgent(env, source);
-    ASSERT_TRUE(agent1.has_value());
-    ASSERT_EQ(agent1->type_, Type::xyagent);
+    ASSERT_TRUE(isValidObject(agent1, env.objects, Type::xyagent));
 
     const auto agent2 = addAgent(env, source);
-    ASSERT_FALSE(agent2.has_value());
+    ASSERT_FALSE(isValidObject(agent2, env.objects, Type::xyagent));
     ASSERT_THROW(agent2.value(), std::bad_optional_access);
 
-    ASSERT_TRUE(objectIsRegistered(agent1, env.objects));
-    ASSERT_FALSE(objectIsRegistered(agent2, env.objects));
-
     ASSERT_TRUE(getLocationFor(agent1, env).has_value());
-    ASSERT_EQ(getLocationFor(agent1, env).value(), source);
     ASSERT_FALSE(getLocationFor(agent2, env).has_value());
     
-    const auto object = getObjectAt(env, source);
-    ASSERT_TRUE(object.has_value());
-    ASSERT_EQ(object->id, agent1->id);
+    const auto object1 = getObjectAt(env, source);
+    ASSERT_TRUE(isValidObject(object1, env.objects, Type::xyagent));
+    ASSERT_EQ(object1->id, agent1->id);
 }
 
 TEST_F(XYEnvironmentAgentTest, AddRejectsOutOfBoundsLocationWithoutRegisteringAgent) {
     const auto agent = addAgent(env, XYLocation(11, 12));
-    ASSERT_FALSE(agent.has_value());
+    ASSERT_FALSE(isValidObject(agent, env.objects, Type::xyagent));
     ASSERT_THROW(agent.value(), std::bad_optional_access);
 
     ASSERT_FALSE(objectIsRegistered(agent, env.objects));
@@ -120,28 +151,19 @@ TEST_F(XYEnvironmentAgentTest, AddRejectsOutOfBoundsLocationWithoutRegisteringAg
 }
 
 TEST_F(XYEnvironmentAgentTest, AddAcceptsBoundaryLocations) {
-    const auto agent1 = addAgent(env, XYLocation(1, 1));
-    const auto agent2 = addAgent(env, XYLocation(10, 12));
+    const auto agent = addAgent(env, XYLocation(1, 1));
+    const auto wall = addWall(env, XYLocation(10, 12));
 
-    ASSERT_TRUE(agent1.has_value()); // write helper function agentState: checks agent has value, is an agent, is registered
-    ASSERT_TRUE(agent2.has_value());
-
-    ASSERT_EQ(agent1->type_, Type::xyagent);
-    ASSERT_EQ(agent2->type_, Type::xyagent);
-
-    ASSERT_TRUE(objectIsRegistered(agent1, env.objects));
-    ASSERT_TRUE(objectIsRegistered(agent2, env.objects));
-
-    ASSERT_EQ(getLocationFor(agent1, env).value(), XYLocation(1, 1));
-    ASSERT_EQ(getLocationFor(agent2, env).value(), XYLocation(10, 12));
+    ASSERT_TRUE(isValidObject(agent, env.objects, Type::xyagent));
+    ASSERT_TRUE(isValidObject(wall, env.objects, Type::wall));
+    
+    ASSERT_EQ(getLocationFor(agent, env).value(), XYLocation(1, 1));
+    ASSERT_EQ(getLocationFor(wall, env).value(), XYLocation(10, 12));
 }
 
 TEST_F(XYEnvironmentAgentTest, MoveToEmptyLocationVacatesSource) {
     const auto agent = addAgent(env, source);
-
-    ASSERT_TRUE(agent.has_value()); // write helper function agentState: checks agent has value, is an agent, is registered
-    ASSERT_EQ(agent->type_, Type::xyagent);
-    ASSERT_TRUE(objectIsRegistered(agent, env.objects));
+    ASSERT_TRUE(isValidObject(agent, env.objects, Type::xyagent));
 
     ASSERT_TRUE(moveObjectTo(agent, env, destination));
     ASSERT_FALSE(isOccupied(env, source));
@@ -151,40 +173,35 @@ TEST_F(XYEnvironmentAgentTest, MoveToEmptyLocationVacatesSource) {
     ASSERT_EQ(getLocationFor(agent, env).value(), destination);
 
     const auto object = getObjectAt(env, destination);
-    ASSERT_TRUE(object.has_value());
+    ASSERT_TRUE(isValidObject(agent, env.objects, Type::xyagent));
     ASSERT_EQ(object->id, agent->id);
 } 
 
 TEST_F(XYEnvironmentAgentTest, MoveRejectsOccupiedDestinationWithoutChangingState) {
-    const auto agent1 = addAgent(env, source);
-    const auto agent2 = addAgent(env, destination);
+    const auto agent = addAgent(env, source);
+    const auto wall = addWall(env, destination);
+    ASSERT_TRUE(isValidObject(agent, env.objects, Type::xyagent));
+    ASSERT_TRUE(isValidObject(wall, env.objects, Type::wall));
 
-    ASSERT_TRUE(agent1.has_value()); // write helper function agentState: checks agent has value, is an agent, is registered
-    ASSERT_TRUE(agent2.has_value());
-
-    ASSERT_EQ(agent1->type_, Type::xyagent);
-    ASSERT_EQ(agent2->type_, Type::xyagent);
-
-    ASSERT_FALSE(moveObjectTo(agent1, env, destination));
+    ASSERT_FALSE(moveObjectTo(agent, env, destination));
 
     ASSERT_TRUE(isOccupied(env, source));
     ASSERT_TRUE(isOccupied(env, destination));
-    ASSERT_TRUE(getLocationFor(agent1, env).has_value());
-    ASSERT_EQ(getLocationFor(agent1, env).value(), source);
+    ASSERT_TRUE(getLocationFor(agent, env).has_value());
+    ASSERT_EQ(getLocationFor(agent, env).value(), source);
 
     const auto sourceObject = getObjectAt(env, source);
     const auto destinationObject = getObjectAt(env, destination);
 
     ASSERT_TRUE(sourceObject.has_value());
     ASSERT_TRUE(destinationObject.has_value());
-    ASSERT_EQ(sourceObject->id, agent1->id);
-    ASSERT_EQ(destinationObject->id, agent2->id);
+    ASSERT_EQ(sourceObject->id, agent->id);
+    ASSERT_EQ(destinationObject->id, wall->id);
 }
 
-TEST_F(XYEnvironmentAgentTest, MoveRejectsOutOfBoundsDestinationWithoutChangingState) {
+TEST_F(XYEnvironmentAgentTest, MoveToOutOfBoundsDestinationFailsWithoutChangingState) {
     const auto agent = addAgent(env, source);
-    ASSERT_TRUE(agent.has_value());
-    ASSERT_EQ(agent->type_, Type::xyagent);
+    ASSERT_TRUE(isValidObject(agent, env.objects, Type::xyagent));
 
     ASSERT_FALSE(moveObjectTo(agent, env, XYLocation(11, 1)));
 
@@ -193,23 +210,22 @@ TEST_F(XYEnvironmentAgentTest, MoveRejectsOutOfBoundsDestinationWithoutChangingS
     ASSERT_EQ(getLocationFor(agent, env).value(), source);
 }
 
-TEST_F(XYEnvironmentAgentTest, MoveToCurrentLocationFailsWithoutChangingState) {
+TEST_F(XYEnvironmentAgentTest, MoveToBlockedLocationFailsWithoutChangingState) {
     const auto agent = addAgent(env, source);
-    ASSERT_TRUE(agent.has_value());
-    ASSERT_EQ(agent->type_, Type::xyagent);
+    ASSERT_TRUE(isValidObject(agent, env.objects, Type::xyagent));
+    const auto wall = addWall(env, destination);
+    ASSERT_TRUE(isValidObject(wall, env.objects, Type::wall));
 
     ASSERT_FALSE(moveObjectTo(agent, env, source));
 
     ASSERT_TRUE(isOccupied(env, source));
-    ASSERT_FALSE(isOccupied(env, destination));
     ASSERT_TRUE(getLocationFor(agent, env).has_value());
     ASSERT_EQ(getLocationFor(agent, env).value(), source);
 }
 
 TEST_F(XYEnvironmentAgentTest, MoveInDirectionToEmptyLocationSucceeds) {
     const auto agent = addAgent(env, XYLocation(3, 5));
-    ASSERT_TRUE(agent.has_value());
-    ASSERT_EQ(agent->type_, Type::xyagent);
+    ASSERT_TRUE(isValidObject(agent, env.objects, Type::xyagent));
 
     ASSERT_TRUE(moveObjectTo(agent, env, XYLocation(4, 6)));
 
@@ -234,45 +250,33 @@ TEST_F(XYEnvironmentAgentTest, MoveInDirectionToEmptyLocationSucceeds) {
     ASSERT_EQ(XYLocation(4, 6), getLocationFor(agent, env));
 }
 
-TEST_F(XYEnvironmentAgentTest, MoveInDirectionFailsWhenDestinationContainsAgentOrWall) {
+TEST_F(XYEnvironmentAgentTest, MoveInDirectionToBlockedLocationFails) {
     XYLocation loc1(2, 3);
-    const auto agent1 = addAgent(env, source);
-    const auto agent2 = addAgent(env, loc1);
 
-    ASSERT_TRUE(agent1.has_value()); // write helper function agentState: checks agent has value, is an agent, is registered
-    ASSERT_TRUE(agent2.has_value());
+    const auto agent = addAgent(env, source);
+    ASSERT_TRUE(isValidObject(agent, env.objects, Type::xyagent));
+    const auto wall = addWall(env, loc1);
+    ASSERT_TRUE(isValidObject(wall, env.objects, Type::wall));
 
-    ASSERT_EQ(agent1->type_, Type::xyagent);
-    ASSERT_EQ(agent2->type_, Type::xyagent);
-
-    ASSERT_TRUE(isOccupied(env, source));
-    ASSERT_TRUE(isOccupied(env, loc1));
-
-    ASSERT_FALSE(moveObject(agent1, env, Direction::north));
-    ASSERT_EQ(source, getLocationFor(agent1, env));       
+    ASSERT_FALSE(moveObject(agent, env, Direction::north));
+    ASSERT_EQ(source, getLocationFor(agent, env));       
 }
 
-TEST_F(XYEnvironmentAgentTest, AddsFailWhenDestinationIsBlocked) {
+TEST_F(XYEnvironmentAgentTest, AddsToBlockedLocationsFail) {
     XYLocation loc1(5, 5);
     XYLocation loc2(8, 6);
     XYLocation loc3(4, 4);
     XYLocation loc4(1, 1);
 
     const auto agent = addAgent(env, loc1);
+    ASSERT_TRUE(isValidObject(agent, env.objects, Type::xyagent));
     const auto wall = addWall(env, loc2);
+    ASSERT_TRUE(isValidObject(wall, env.objects, Type::wall));
     const auto dirt = addDirt(env, loc3);
+    ASSERT_TRUE(isValidObject(dirt, env.objects, Type::dirt));
     const auto gold = addGold(env, loc4);
+    ASSERT_TRUE(isValidObject(gold, env.objects, Type::gold));
 
-    ASSERT_TRUE(agent.has_value()); // write helper function agentState: checks agent has value, is an agent, is registered
-    ASSERT_TRUE(wall.has_value());
-    ASSERT_TRUE(dirt.has_value());
-    ASSERT_TRUE(gold.has_value());
-
-    ASSERT_EQ(agent->type_, Type::xyagent);
-    ASSERT_EQ(wall->type_, Type::wall);
-    ASSERT_EQ(dirt->type_, Type::dirt);
-    ASSERT_EQ(gold->type_, Type::gold);
-  
     const auto agent2 = addAgent(env, loc1);
     ASSERT_FALSE(agent2.has_value());
 
@@ -294,22 +298,15 @@ TEST_F(XYEnvironmentAgentTest, MovesFailWhenDestinationIsBlocked) {
     XYLocation loc5(5, 6);
 
     const auto agent = addAgent(env, loc1);
+    ASSERT_TRUE(isValidObject(agent, env.objects, Type::xyagent));
     const auto agent2 = addAgent(env, loc2);
+    ASSERT_TRUE(isValidObject(agent2, env.objects, Type::xyagent));
     const auto dirt = addDirt(env, loc3);
+    ASSERT_TRUE(isValidObject(dirt, env.objects, Type::dirt));
     const auto gold = addGold(env, loc4);
+    ASSERT_TRUE(isValidObject(gold, env.objects, Type::gold));
     const auto wall = addWall(env, loc5);
-
-    ASSERT_TRUE(agent.has_value()); // write helper function agentState: checks agent has value, is an agent, is registered
-    ASSERT_TRUE(agent2.has_value()); // write helper function agentState: checks agent has value, is an agent, is registered
-    ASSERT_TRUE(dirt.has_value());
-    ASSERT_TRUE(gold.has_value());
-    ASSERT_TRUE(wall.has_value());
-
-    ASSERT_EQ(agent->type_, Type::xyagent);
-    ASSERT_EQ(agent2->type_, Type::xyagent);
-    ASSERT_EQ(dirt->type_, Type::dirt);
-    ASSERT_EQ(gold->type_, Type::gold);
-    ASSERT_EQ(wall->type_, Type::wall);
+    ASSERT_TRUE(isValidObject(wall, env.objects, Type::wall));
 
     ASSERT_FALSE(moveObject(agent2, env, Direction::north));
     ASSERT_FALSE(moveObject(agent, env, Direction::north));
