@@ -74,6 +74,7 @@ TEST_F(XYEnvironmentTest, EmptyAndOccupiedQueriesAgree) {
     ASSERT_FALSE(isOccupied(env, loc));
 
     const auto agent = addAgent(env, loc);
+
     ASSERT_TRUE(isValidObject(agent, env.objects, Type::xyagent));
     ASSERT_TRUE(getObjectAt(env, loc).has_value());
     ASSERT_TRUE(isOccupied(env, loc));
@@ -122,8 +123,6 @@ TEST_F(XYEnvironmentAgentTest, AddRegistersObjectAndRecordsLocation) {
     const auto object4 = getObjectAt(env, XYLocation(6, 6));
     ASSERT_EQ(object4->id, gold->id);
 }
-
-// I want to return meaningful error messages, not just true/false
 
 TEST_F(XYEnvironmentAgentTest, AddRejectsOccupiedLocationWithoutChangingState) {
     const auto agent1 = addAgent(env, source);

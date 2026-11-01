@@ -40,6 +40,7 @@ namespace environment {
     export ObjRef addWall(XYEnvironment& env, const XYLocation& loc);
     export ObjRef addDirt(XYEnvironment& env, const XYLocation& loc);
     export ObjRef addGold(XYEnvironment& env, const XYLocation& loc);
+    export template <typename T> ObjRef addObject(XYEnvironment& env, const XYLocation& loc);
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -77,6 +78,7 @@ namespace environment {
 
     struct XYAgent{ 
       TypeRef ref;
+      bool isAlive = true;
       XYAgent() : ref(Type::xyagent) {}
     };
 
@@ -295,38 +297,30 @@ namespace environment {
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    ObjRef addAgent(XYEnvironment& env, const XYLocation& loc) {
-        XYAgent agent;
-        if (!addObjectTo(agent.ref, env, loc)) return std::nullopt;
-        return agent.ref;
+    template <typename T>
+    ObjRef addObject(XYEnvironment& env, const XYLocation& loc) {
+        T object;
+        if (!addObjectTo(object.ref, env, loc)) return std::nullopt;
+        return object.ref;
+    }
+
+    ObjRef addAgent(XYEnvironment& env, const XYLocation& loc) { 
+        return addObject<XYAgent>(env, loc); 
+    }
+
+    ObjRef addWall(XYEnvironment& env, const XYLocation& loc) { 
+        return addObject<Wall>(env, loc); 
+    }
+
+    ObjRef addDirt(XYEnvironment& env, const XYLocation& loc) { 
+        return addObject<Dirt>(env, loc); 
+    }
+
+    ObjRef addGold(XYEnvironment& env, const XYLocation& loc) { 
+        return addObject<Gold>(env, loc); 
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
-
-    ObjRef addWall(XYEnvironment& env, const XYLocation& loc) {
-        Wall wall;
-        if (!addObjectTo(wall.ref, env, loc)) return std::nullopt;
-        return wall.ref;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-
-    ObjRef addDirt(XYEnvironment& env, const XYLocation& loc) {
-        Dirt dirt;
-        if (!addObjectTo(dirt.ref, env, loc)) return std::nullopt;
-        return dirt.ref;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-
-    ObjRef addGold(XYEnvironment& env, const XYLocation& loc) {
-        Gold gold;
-        if (!addObjectTo(gold.ref, env, loc)) return std::nullopt;
-        return gold.ref;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-
 
 } // namespace environment 
 
