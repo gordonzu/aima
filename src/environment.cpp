@@ -42,7 +42,6 @@ namespace environment {
     export ObjRef addGold(XYEnvironment& env, const XYLocation& loc);
     export template <typename T> ObjRef addObject(XYEnvironment& env, const XYLocation& loc);
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     enum class Type { wall, xyagent, dirt, gold };
     enum class Direction { north, south, east, west };
@@ -107,21 +106,18 @@ namespace environment {
         XYSpace xyspace;
     };
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     export std::ostream& operator<<(std::ostream& os, const TypeRef& t) {
         const char* name = (t.type_ == Type::xyagent) ? "xyagent" : "wall";
         return os << "[" << name << ", " << t.id << "]";
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     export std::ostream& operator<<(std::ostream& os, const ObjRef& t) {
         if (!t) return os << "[none]";
         return os << *t;
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     export bool inBounds(const XYEnvironment& env, const XYLocation& loc) {
         return loc.x >= 1 && loc.y >= 1 &&
@@ -129,20 +125,17 @@ namespace environment {
                loc.y <= static_cast<int>(env.h_);
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     bool registerObject(Objects& objects, const TypeRef& ref)  {
         return objects.emplace(ref.id, ref).second;
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     bool objectIsRegistered(const ObjRef& t, const Objects& objects) {
         if (!t) return false;
         return objects.contains(t->id);
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     std::optional<XYLocation> getLocationFor(const ObjRef& t, const XYEnvironment& env) {
         if (!t) return std::nullopt;
@@ -151,7 +144,6 @@ namespace environment {
         return it->second;
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
      
     ObjRef getObjectAt(const XYEnvironment& env, const XYLocation& loc) {
         if (!inBounds(env, loc)) return std::nullopt;
@@ -165,7 +157,6 @@ namespace environment {
         return tiles.front();
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     XYEnvironment makeXYEnvironment(int w, int h) {
         if (w <= 0 || h <= 0) throw std::invalid_argument("params must be > 0");
@@ -183,13 +174,11 @@ namespace environment {
         return env;
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     size_t mapSize(const XYEnvironment& env) {
         return env.xyspace.size();
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     bool isBlocked(const XYEnvironment& env, const XYLocation& loc) {
         auto it = env.xyspace.find(loc);
@@ -201,14 +190,12 @@ namespace environment {
         return false;
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     bool isOccupied(const XYEnvironment& env, const XYLocation& loc) {
         auto it = env.xyspace.find(loc);
         return it != env.xyspace.end() && !it->second.empty(); 
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     bool moveObjectTo(const ObjRef& ref, XYEnvironment& env, const XYLocation& newLocation) {
         auto refIdItr = env.locations.find(ref->id);
@@ -235,7 +222,6 @@ namespace environment {
         return true;
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     bool moveObject(const ObjRef& ref, XYEnvironment& env, Direction dir) {
         XYLocation newLoc(0, 0); 
@@ -272,7 +258,6 @@ namespace environment {
         return false;
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     bool addObjectTo(const TypeRef& ref, XYEnvironment& env, const XYLocation& loc) {
         auto it = env.xyspace.find(loc);
@@ -295,7 +280,6 @@ namespace environment {
         return true;
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     template <typename T>
     ObjRef addObject(XYEnvironment& env, const XYLocation& loc) {
@@ -320,7 +304,6 @@ namespace environment {
         return addObject<Gold>(env, loc); 
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
 
 } // namespace environment 
 
