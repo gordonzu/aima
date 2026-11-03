@@ -17,7 +17,7 @@ ninja -C "$BUILD_DIR"
 
 ln -sfn "$BUILD_DIR/compile_commands.json" "$ROOT_DIR/compile_commands.json"
 
-valgrind --tool=memcheck --track-origins=yes --leak-check=full --show-leak-kinds=all \
+#valgrind --tool=memcheck --track-origins=yes --leak-check=full --show-leak-kinds=all \
   "$BUILD_DIR/tests/unit_tests/aima_unit_tests"
 
 

@@ -5,7 +5,7 @@ module;
 #include <map>
 #include <optional>
 #include <iostream>
-#include <vector>
+#include <set>
 
 export module aima.environment;
 
@@ -20,28 +20,27 @@ namespace environment {
     export enum class Type;
     export enum class Direction;
 
-    using Tiles = std::vector<TypeRef>;
-    using ObjRef = std::optional<TypeRef>;
+    using ObjectSet = std::set<TypeRef>;
+    using ObjectRef = std::optional<TypeRef>;
     using Objects = std::map<int, TypeRef>;
     using Locations = std::map<int, XYLocation>;
-    using XYSpace = std::map<XYLocation, Tiles>;
+    using XYSpace = std::map<XYLocation, ObjectSet>;
 
     export bool registerObject(Objects& objects, const TypeRef& ref);
     export XYEnvironment makeXYEnvironment(int w, int h);
     export size_t mapSize(const XYEnvironment& env); 
     export bool isOccupied(const XYEnvironment& env, const XYLocation& loc); 
-    export bool moveObjectTo(const ObjRef& ref, XYEnvironment& env, const XYLocation& newLocation); 
-    export bool moveObject(const ObjRef& ref, XYEnvironment& env, Direction dir); 
+    export bool moveObjectTo(const ObjectRef& ref, XYEnvironment& env, const XYLocation& newLocation); 
+    export bool moveObject(const ObjectRef& ref, XYEnvironment& env, Direction dir); 
     bool addObjectTo(const TypeRef& ref, XYEnvironment& env, const XYLocation& loc); 
-    export std::optional<XYLocation> getLocationFor(const ObjRef& t, const XYEnvironment& env); 
-    export bool objectIsRegistered(const ObjRef& t, const Objects& objects); 
-    export ObjRef getObjectsAt(const XYEnvironment& env, const XYLocation& loc);
-    export ObjRef addAgent(XYEnvironment& env, const XYLocation& loc);
-    export ObjRef addWall(XYEnvironment& env, const XYLocation& loc);
-    export ObjRef addDirt(XYEnvironment& env, const XYLocation& loc);
-    export ObjRef addGold(XYEnvironment& env, const XYLocation& loc);
-    template <typename T> ObjRef addObject(XYEnvironment& env, const XYLocation& loc);
-
+    export std::optional<XYLocation> getLocationFor(const ObjectRef& t, const XYEnvironment& env); 
+    export bool objectIsRegistered(const ObjectRef& t, const Objects& objects); 
+    export ObjectSet getSetOfObjectsAt(const XYEnvironment& env, const XYLocation& loc);
+    export ObjectRef addAgent(XYEnvironment& env, const XYLocation& loc);
+    export ObjectRef addWall(XYEnvironment& env, const XYLocation& loc);
+    export ObjectRef addDirt(XYEnvironment& env, const XYLocation& loc);
+    export ObjectRef addGold(XYEnvironment& env, const XYLocation& loc);
+    template <typename T> ObjectRef addObject(XYEnvironment& env, const XYLocation& loc);
 
     enum class Type { wall, xyagent, dirt, gold };
     enum class Direction { north, south, east, west };
@@ -52,6 +51,8 @@ namespace environment {
 
         explicit TypeRef(Type t) : type_(t), id(nextId()) {}
         TypeRef() = delete;
+
+        friend bool operator<(const TypeRef& a, const TypeRef& b) { return a.id < b.id; }
 
     private:
         static int nextId() {
@@ -111,7 +112,7 @@ namespace environment {
         return os << "[" << name << ", " << t.id << "]";
     }
 
-    export std::ostream& operator<<(std::ostream& os, const ObjRef& t) {
+    export std::ostream& operator<<(std::ostream& os, const ObjectRef& t) {
         if (!t) return os << "[none]";
         return os << *t;
     }
@@ -126,28 +127,23 @@ namespace environment {
         return objects.emplace(ref.id, ref).second;
     }
 
-    bool objectIsRegistered(const ObjRef& t, const Objects& objects) {
+    bool objectIsRegistered(const ObjectRef& t, const Objects& objects) {
         if (!t) return false;
         return objects.contains(t->id);
     }
 
-    std::optional<XYLocation> getLocationFor(const ObjRef& t, const XYEnvironment& env) {
+    std::optional<XYLocation> getLocationFor(const ObjectRef& t, const XYEnvironment& env) {
         if (!t) return std::nullopt;
         auto it = env.locations.find(t->id);
         if (it == env.locations.end()) return std::nullopt;
         return it->second;
     }
 
-    ObjRef getObjectsAt(const XYEnvironment& env, const XYLocation& loc) {
-        if (!inBounds(env, loc)) return std::nullopt;
-
+    ObjectSet getSetOfObjectsAt(const XYEnvironment& env, const XYLocation& loc) {
+        if (!inBounds(env, loc)) throw std::invalid_argument("XYLocation must be within matrix bounds");
         auto it = env.xyspace.find(loc);
-        if (it == env.xyspace.end()) return std::nullopt;
-
-        const Tiles& tiles = it->second;
-        if (tiles.empty()) return std::nullopt;
-
-        return tiles.front();
+        if (it == env.xyspace.end()) return {};
+        return ObjectSet(it->second.begin(), it->second.end());
     }
 
     XYEnvironment makeXYEnvironment(int w, int h) {
@@ -159,7 +155,7 @@ namespace environment {
 
         for (int x = 1; x <= w; ++x) {
             for (int y = 1; y <= h; ++y) {
-                env.xyspace.emplace(XYLocation(x,y), Tiles()); 
+                env.xyspace.emplace(XYLocation(x,y), ObjectSet()); 
             }
         }
 
@@ -172,7 +168,7 @@ namespace environment {
 
     bool isBlocked(const XYEnvironment& env, const XYLocation& loc) {
         auto it = env.xyspace.find(loc);
-        std::vector<TypeRef> refs = it->second;
+        std::set<TypeRef> refs = it->second;
         
         for (const auto r : refs) {
             if (r.type_ == Type::wall) return true;
@@ -186,7 +182,7 @@ namespace environment {
         return it != env.xyspace.end() && !it->second.empty(); 
     }
 
-    bool moveObjectTo(const ObjRef& ref, XYEnvironment& env, const XYLocation& newLocation) {
+    bool moveObjectTo(const ObjectRef& ref, XYEnvironment& env, const XYLocation& newLocation) {
         auto refIdItr = env.locations.find(ref->id);
         if (refIdItr == env.locations.end()) return false;
 
@@ -199,15 +195,15 @@ namespace environment {
 
         if (oldLocItr == env.xyspace.end()) return false;
         
-        Tiles& tiles = oldLocItr->second;
-        std::erase_if(tiles, [&](const TypeRef& r) { return r.id == ref->id; }); 
+        ObjectSet& objects = oldLocItr->second;
+        objects.erase(*ref);
 
-        newLocItr->second.push_back(*ref);
+        newLocItr->second.emplace(*ref);
         refIdItr->second = newLocation;
         return true;
     }
 
-    bool moveObject(const ObjRef& ref, XYEnvironment& env, Direction dir) {
+    bool moveObject(const ObjectRef& ref, XYEnvironment& env, Direction dir) {
         XYLocation newLoc(0, 0); 
         XYLocation oldLoc = *(getLocationFor(ref, env));
 
@@ -257,31 +253,31 @@ namespace environment {
             return false;
         }
 
-        it->second.push_back(ref);
+        it->second.emplace(ref);
         env.locations[ref.id] = loc;
         return true;
     }
 
     template <typename T>
-    ObjRef addObject(XYEnvironment& env, const XYLocation& loc) {
+    ObjectRef addObject(XYEnvironment& env, const XYLocation& loc) {
         T object;
         if (!addObjectTo(object.ref, env, loc)) return std::nullopt;
         return object.ref;
     }
 
-    ObjRef addAgent(XYEnvironment& env, const XYLocation& loc) { 
+    ObjectRef addAgent(XYEnvironment& env, const XYLocation& loc) { 
         return addObject<XYAgent>(env, loc); 
     }
 
-    ObjRef addWall(XYEnvironment& env, const XYLocation& loc) { 
+    ObjectRef addWall(XYEnvironment& env, const XYLocation& loc) { 
         return addObject<Wall>(env, loc); 
     }
 
-    ObjRef addDirt(XYEnvironment& env, const XYLocation& loc) { 
+    ObjectRef addDirt(XYEnvironment& env, const XYLocation& loc) { 
         return addObject<Dirt>(env, loc); 
     }
 
-    ObjRef addGold(XYEnvironment& env, const XYLocation& loc) { 
+    ObjectRef addGold(XYEnvironment& env, const XYLocation& loc) { 
         return addObject<Gold>(env, loc); 
     }
 
