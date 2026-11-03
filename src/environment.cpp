@@ -32,15 +32,15 @@ namespace environment {
     export bool isOccupied(const XYEnvironment& env, const XYLocation& loc); 
     export bool moveObjectTo(const ObjRef& ref, XYEnvironment& env, const XYLocation& newLocation); 
     export bool moveObject(const ObjRef& ref, XYEnvironment& env, Direction dir); 
-    export bool addObjectTo(const TypeRef& ref, XYEnvironment& env, const XYLocation& loc); 
+    bool addObjectTo(const TypeRef& ref, XYEnvironment& env, const XYLocation& loc); 
     export std::optional<XYLocation> getLocationFor(const ObjRef& t, const XYEnvironment& env); 
     export bool objectIsRegistered(const ObjRef& t, const Objects& objects); 
-    export ObjRef getObjectAt(const XYEnvironment& env, const XYLocation& loc);
+    export ObjRef getObjectsAt(const XYEnvironment& env, const XYLocation& loc);
     export ObjRef addAgent(XYEnvironment& env, const XYLocation& loc);
     export ObjRef addWall(XYEnvironment& env, const XYLocation& loc);
     export ObjRef addDirt(XYEnvironment& env, const XYLocation& loc);
     export ObjRef addGold(XYEnvironment& env, const XYLocation& loc);
-    export template <typename T> ObjRef addObject(XYEnvironment& env, const XYLocation& loc);
+    template <typename T> ObjRef addObject(XYEnvironment& env, const XYLocation& loc);
 
 
     enum class Type { wall, xyagent, dirt, gold };
@@ -106,18 +106,15 @@ namespace environment {
         XYSpace xyspace;
     };
 
-
     export std::ostream& operator<<(std::ostream& os, const TypeRef& t) {
         const char* name = (t.type_ == Type::xyagent) ? "xyagent" : "wall";
         return os << "[" << name << ", " << t.id << "]";
     }
 
-
     export std::ostream& operator<<(std::ostream& os, const ObjRef& t) {
         if (!t) return os << "[none]";
         return os << *t;
     }
-
 
     export bool inBounds(const XYEnvironment& env, const XYLocation& loc) {
         return loc.x >= 1 && loc.y >= 1 &&
@@ -125,17 +122,14 @@ namespace environment {
                loc.y <= static_cast<int>(env.h_);
     }
 
-
     bool registerObject(Objects& objects, const TypeRef& ref)  {
         return objects.emplace(ref.id, ref).second;
     }
-
 
     bool objectIsRegistered(const ObjRef& t, const Objects& objects) {
         if (!t) return false;
         return objects.contains(t->id);
     }
-
 
     std::optional<XYLocation> getLocationFor(const ObjRef& t, const XYEnvironment& env) {
         if (!t) return std::nullopt;
@@ -144,8 +138,7 @@ namespace environment {
         return it->second;
     }
 
-     
-    ObjRef getObjectAt(const XYEnvironment& env, const XYLocation& loc) {
+    ObjRef getObjectsAt(const XYEnvironment& env, const XYLocation& loc) {
         if (!inBounds(env, loc)) return std::nullopt;
 
         auto it = env.xyspace.find(loc);
@@ -156,7 +149,6 @@ namespace environment {
 
         return tiles.front();
     }
-
 
     XYEnvironment makeXYEnvironment(int w, int h) {
         if (w <= 0 || h <= 0) throw std::invalid_argument("params must be > 0");
@@ -174,28 +166,25 @@ namespace environment {
         return env;
     }
 
-
     size_t mapSize(const XYEnvironment& env) {
         return env.xyspace.size();
     }
-
 
     bool isBlocked(const XYEnvironment& env, const XYLocation& loc) {
         auto it = env.xyspace.find(loc);
         std::vector<TypeRef> refs = it->second;
         
-        const auto& ref = refs.front();
-        if (ref.type_ == Type::xyagent || ref.type_ == Type::wall) return true;
+        for (const auto r : refs) {
+            if (r.type_ == Type::wall) return true;
+        }
 
         return false;
     }
-
 
     bool isOccupied(const XYEnvironment& env, const XYLocation& loc) {
         auto it = env.xyspace.find(loc);
         return it != env.xyspace.end() && !it->second.empty(); 
     }
-
 
     bool moveObjectTo(const ObjRef& ref, XYEnvironment& env, const XYLocation& newLocation) {
         auto refIdItr = env.locations.find(ref->id);
@@ -204,10 +193,6 @@ namespace environment {
         auto newLocItr = env.xyspace.find(newLocation);
         if (newLocItr == env.xyspace.end()) return false;
 
-        if (isOccupied(env, (newLocItr->first))) { 
-            if (isBlocked(env, (newLocItr->first))) return false;          
-        }
-        
         auto oldLocation = (getLocationFor(ref, env));
         if (!oldLocation) return false;
         auto oldLocItr = env.xyspace.find(*oldLocation);
@@ -215,13 +200,12 @@ namespace environment {
         if (oldLocItr == env.xyspace.end()) return false;
         
         Tiles& tiles = oldLocItr->second;
-        std::erase_if(tiles, [&](const TypeRef& r) { return r.id == ref->id; }); // how will I guard against agent dupes
+        std::erase_if(tiles, [&](const TypeRef& r) { return r.id == ref->id; }); 
 
         newLocItr->second.push_back(*ref);
         refIdItr->second = newLocation;
         return true;
     }
-
 
     bool moveObject(const ObjRef& ref, XYEnvironment& env, Direction dir) {
         XYLocation newLoc(0, 0); 
@@ -254,21 +238,19 @@ namespace environment {
             std::cerr << "Exception: " << e.what() << "\n";
         }
 
-        if (moveObjectTo(ref, env, newLoc)) return true;
-        return false;
-    }
-
-
-    bool addObjectTo(const TypeRef& ref, XYEnvironment& env, const XYLocation& loc) {
-        auto it = env.xyspace.find(loc);
-        if (it == env.xyspace.end()) return false;
-
-        if (isOccupied(env, loc)) { 
-            if (isBlocked(env, loc)) {
+        if (isOccupied(env, newLoc)) { 
+            if (isBlocked(env, newLoc)) {
                 //std::cout << "BLOCKED" << "\n";
                 return false;          
             }
         }
+
+        return moveObjectTo(ref, env, newLoc);
+    }
+
+    bool addObjectTo(const TypeRef& ref, XYEnvironment& env, const XYLocation& loc) {
+        auto it = env.xyspace.find(loc);
+        if (it == env.xyspace.end()) return false;
 
         if (!registerObject(env.objects, ref)) {
             //std::cout << "UNREGISTERED" << "\n";
@@ -279,7 +261,6 @@ namespace environment {
         env.locations[ref.id] = loc;
         return true;
     }
-
 
     template <typename T>
     ObjRef addObject(XYEnvironment& env, const XYLocation& loc) {
