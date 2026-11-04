@@ -8,3 +8,6 @@ build/
 *.so
 *.user
 compile_commands.json
+build/bench-*/
+bench-results/
+bench-*.json

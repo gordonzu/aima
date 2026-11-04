@@ -12,7 +12,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_SCAN_FOR_MODULES ON)
 
+option(BUILD_BENCHMARKS "Build Google Benchmark targets (use a Release build)" OFF)
+
 enable_testing()
 
 add_subdirectory(src)
 add_subdirectory(tests)
+
+if(BUILD_BENCHMARKS)
+    add_subdirectory(benchmarks)
+endif()
