@@ -30,12 +30,15 @@ namespace environment {
     export XYEnvironment makeXYEnvironment(int w, int h);
     export size_t mapSize(const XYEnvironment& env); 
     export bool isOccupied(const XYEnvironment& env, const XYLocation& loc); 
+    export bool isBlocked(const XYEnvironment& env, const XYLocation& loc); 
     export bool moveObjectTo(const ObjectRef& ref, XYEnvironment& env, const XYLocation& newLocation); 
     export bool moveObject(const ObjectRef& ref, XYEnvironment& env, Direction dir); 
+    export bool makePerimeter(XYEnvironment& env);
     bool addObjectTo(const TypeRef& ref, XYEnvironment& env, const XYLocation& loc); 
     export std::optional<XYLocation> getLocationFor(const ObjectRef& t, const XYEnvironment& env); 
     export bool objectIsRegistered(const ObjectRef& t, const Objects& objects); 
     export ObjectSet getSetOfObjectsAt(const XYEnvironment& env, const XYLocation& loc);
+    export ObjectSet getObjectsNear(const ObjectRef& t, const XYEnvironment& env, int radius);
     export ObjectRef addAgent(XYEnvironment& env, const XYLocation& loc);
     export ObjectRef addWall(XYEnvironment& env, const XYLocation& loc);
     export ObjectRef addDirt(XYEnvironment& env, const XYLocation& loc);
@@ -144,6 +147,58 @@ namespace environment {
         auto it = env.xyspace.find(loc);
         if (it == env.xyspace.end()) return {};
         return ObjectSet(it->second.begin(), it->second.end());
+    }
+
+    XYLocation calculateNewLocation(const XYLocation& loc, Direction d, int steps) {
+        int newX,  newY;
+        XYLocation newLocation;
+
+        if (d == Direction::north) {
+            newY = loc.y + steps;
+            newX = loc.x;
+            return XYLocation(newX, newY);
+        }
+        else if (d == Direction::south) {
+            newY = loc.y - steps;
+            newX = loc.x;
+            return XYLocation(newX, newY);
+        }
+        else if (d == Direction::east) {
+            newY = loc.y;
+            newX = loc.x + steps;
+            return XYLocation(newX, newY);
+        }
+        else {
+            newY = loc.y;
+            newX = loc.x - steps;
+            return XYLocation(newX, newY);
+        }
+    }
+
+    bool withinRadius(int radius, const XYLocation& a, const XYLocation& b) {
+        if (radius < 0) return false;
+
+        const long long dx = static_cast<long long>(a.x) - b.x;
+        const long long dy = static_cast<long long>(a.y) - b.y;
+        const long long r = radius;
+
+        return dx * dx + dy * dy <= r * r;
+    }
+
+    ObjectSet getObjectsNear(const ObjectRef& t, const XYEnvironment& env, int radius) {
+        ObjectSet near;
+
+        auto xy = getLocationFor(t, env);
+        if (!xy) return near;
+
+        for (const auto& [loc, objects] : env.xyspace) {
+            if (withinRadius(radius, *xy, loc)) {
+                near.insert(objects.begin(), objects.end()); 
+            }
+        } 
+
+        near.erase(*t);
+        return near;
     }
 
     XYEnvironment makeXYEnvironment(int w, int h) {
@@ -255,6 +310,23 @@ namespace environment {
 
         it->second.emplace(ref);
         env.locations[ref.id] = loc;
+        return true;
+    }
+
+    bool makePerimeter(XYEnvironment& env) {
+        const int width = static_cast<int>(env.w_);
+        const int height = static_cast<int>(env.h_);
+
+        for (int i = 1; i <= width; ++i) {
+            addWall(env, XYLocation(i, 1));
+            if (height > 1) addWall(env, XYLocation(i, height));
+        }
+
+        for (int y = 2; y < height; ++y) {
+            addWall(env, XYLocation(1, y));
+            if (width > 1) addWall(env, XYLocation(width, y));
+        }
+
         return true;
     }
 

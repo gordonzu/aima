@@ -301,6 +301,67 @@ TEST_F(XYEnvironmentAgentTest, MoveInDirectionToLocationBlockedByWallFails) {
     ASSERT_EQ(source, getLocationFor(agent, env));       
 }
 
+TEST_F(XYEnvironmentAgentTest, GetObjectsNearReturnsAllNeighboringObjectsInRadius) {
+    const auto agent = addAgent(env, XYLocation(5, 5));
+    ASSERT_TRUE(isValidObject(agent, env.objects, Type::xyagent));
+    const auto agent2 = addAgent(env, XYLocation(7, 4));
+    ASSERT_TRUE(isValidObject(agent2, env.objects, Type::xyagent));
+    const auto agent3 = addAgent(env, XYLocation(5, 7));
+    ASSERT_TRUE(isValidObject(agent3, env.objects, Type::xyagent));
+    const auto wall = addWall(env, XYLocation(3, 10));
+    ASSERT_TRUE(isValidObject(wall, env.objects, Type::wall));
+
+    std::set<TypeRef> visibleToAgent = getObjectsNear(agent, env, 3);
+    ASSERT_TRUE(visibleToAgent.size() == 2);
+
+    std::set<TypeRef> visibleToAgent2 = getObjectsNear(agent2, env, 3);
+    ASSERT_TRUE(visibleToAgent2.size() == 1);
+
+    ASSERT_TRUE(moveObject(agent2, env, Direction::north));
+    visibleToAgent2 = getObjectsNear(agent2, env, 3);
+    ASSERT_TRUE(visibleToAgent2.size() == 2);
+
+    ASSERT_TRUE(moveObjectTo(agent3, env, XYLocation(3, 11)));
+    std::set<TypeRef> visibleToAgent3 = getObjectsNear(agent3, env, 3);
+    ASSERT_TRUE(visibleToAgent3.size() == 1);
+}
+
+TEST_F(XYEnvironmentAgentTest, CreateWalledPerimeter) {
+   ASSERT_TRUE(makePerimeter(env));
+
+   ASSERT_TRUE(isBlocked(env, XYLocation(1, 1)));
+   ASSERT_TRUE(isBlocked(env, XYLocation(1, 7)));
+   ASSERT_TRUE(isBlocked(env, XYLocation(1, 12)));
+   ASSERT_TRUE(isBlocked(env, XYLocation(7, 1)));
+   ASSERT_TRUE(isBlocked(env, XYLocation(10, 1)));
+   ASSERT_TRUE(isBlocked(env, XYLocation(10, 7)));
+   ASSERT_TRUE(isBlocked(env, XYLocation(10, 12)));
+   ASSERT_TRUE(isBlocked(env, XYLocation(7, 12)));
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // figure out TypeRef equality, equivalence 
 
 
