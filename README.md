@@ -10,3 +10,19 @@ C++ implementation of algorithms from [Russell](http://www.cs.berkeley.edu/~russ
 |2.7|47|Table-Driven-Agent|[agent_programs](/aicpp/src/agent/agent_programs)|
 
 
+
+## Building, testing and benchmarking
+
+```bash
+./mm          # Debug build + unit tests in build/ (unchanged behavior)
+./mm bench    # Release builds in build/bench-O2 and build/bench-O3, runs xy_bench
+./mm all      # Debug tests, then benchmarks
+```
+
+Benchmarks use [Google Benchmark](https://github.com/google/benchmark). If it is not installed
+(`find_package(benchmark)`), CMake fetches v1.8.3 automatically. The benchmark targets are only
+configured with `-DBUILD_BENCHMARKS=ON` (done by `mm bench`), so normal Debug builds don't need it.
+
+JSON results go to the gitignored `bench-results/bench-O2.json` and `bench-O3.json`. Compare with
+Google Benchmark's `compare.py` (`tools/compare.py benchmarks bench-O2.json bench-O3.json`).
+Always benchmark Release builds; Debug results are not meaningful.
